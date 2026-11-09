@@ -1,0 +1,351 @@
+import type { DevCompany, RosterRow } from "@/data/dev/types";
+
+/**
+ * Fictional development tenants.
+ * These records are not customer data and must not be written to a production database.
+ */
+function roster(
+  siteIds: string[],
+  trades: string[],
+  onSite: number[][],
+  assigned: number[][],
+): RosterRow[] {
+  return siteIds.flatMap((siteId, siteIndex) =>
+    trades.map((trade, tradeIndex) => ({
+      siteId,
+      trade,
+      onSite: onSite[siteIndex]?.[tradeIndex] ?? 0,
+      assigned: assigned[siteIndex]?.[tradeIndex] ?? 0,
+    })),
+  );
+}
+
+const northlineTrades = [
+  "Carpenters",
+  "Steel fixers",
+  "Masons",
+  "Plant",
+  "Labour",
+  "Supervisors",
+  "Electricians",
+];
+
+const northlineSites = ["gate-north", "gate-south", "west-yard", "harbor-apron", "civic-steps", "culvert-east"];
+
+const northline: DevCompany = {
+  origin: "development",
+  id: "northline",
+  name: "Northline Civil",
+  legalName: "Northline Civil Development Tenant",
+  currency: "INR",
+  locale: "en-IN",
+  datasetNote: "Fictional operating figures for interface development. No GPS devices were read.",
+  user: {
+    id: "u-asha",
+    name: "Asha Menon",
+    role: "Operations director",
+    email: "asha.menon@northline.example",
+    fictional: true,
+  },
+  workspaces: [
+    { id: "operations", name: "Operations", lens: "operations" },
+    { id: "commercial", name: "Commercial", lens: "commercial" },
+    { id: "assurance", name: "Assurance", lens: "assurance" },
+  ],
+  projects: [
+    {
+      id: "river-gate",
+      code: "NL-014",
+      name: "River Gate Bridge",
+      status: "active",
+      progress: 62,
+      budget: 18400000,
+      spent: 11240000,
+      siteIds: ["gate-north", "gate-south"],
+      start: "2025-06-02",
+      finish: "2027-03-31",
+    },
+    {
+      id: "west-yard",
+      code: "NL-021",
+      name: "West Yard Depot",
+      status: "active",
+      progress: 41,
+      budget: 6200000,
+      spent: 2480000,
+      siteIds: ["west-yard"],
+      start: "2026-01-13",
+      finish: "2027-01-15",
+    },
+    {
+      id: "harbor",
+      code: "NL-027",
+      name: "Harbor Shed 4",
+      status: "mobilising",
+      progress: 18,
+      budget: 4100000,
+      spent: 640000,
+      siteIds: ["harbor-apron"],
+      start: "2026-09-01",
+      finish: "2027-06-30",
+    },
+    {
+      id: "civic",
+      code: "NL-011",
+      name: "Civic Stairs",
+      status: "closing",
+      progress: 88,
+      budget: 1900000,
+      spent: 1710000,
+      siteIds: ["civic-steps"],
+      start: "2025-11-03",
+      finish: "2026-11-21",
+    },
+    {
+      id: "culvert",
+      code: "NL-018",
+      name: "East Culvert",
+      status: "active",
+      progress: 55,
+      budget: 2700000,
+      spent: 1490000,
+      siteIds: ["culvert-east"],
+      start: "2026-02-16",
+      finish: "2026-12-18",
+    },
+    {
+      id: "quarry",
+      code: "NL-030",
+      name: "Quarry Access",
+      status: "active",
+      progress: 33,
+      budget: 980000,
+      spent: 310000,
+      siteIds: ["quarry-road"],
+      start: "2026-07-06",
+      finish: "2027-02-27",
+    },
+    {
+      id: "pump",
+      code: "NL-032",
+      name: "Pump House B",
+      status: "mobilising",
+      progress: 9,
+      budget: 760000,
+      spent: 40000,
+      siteIds: ["pump-house"],
+      start: "2026-10-20",
+      finish: "2027-04-30",
+    },
+    {
+      id: "embank",
+      code: "NL-008",
+      name: "North Embankment",
+      status: "closing",
+      progress: 91,
+      budget: 5400000,
+      spent: 5010000,
+      siteIds: ["embankment"],
+      start: "2025-04-07",
+      finish: "2026-11-28",
+    },
+  ],
+  sites: [
+    { id: "gate-north", projectId: "river-gate", name: "Gate North abutment", place: "River mile 12", radiusMeters: 150, hoursToday: 214, hoursPlanned: 224, openIssues: 2 },
+    { id: "gate-south", projectId: "river-gate", name: "Gate South pier", place: "River mile 12", radiusMeters: 150, hoursToday: 168, hoursPlanned: 176, openIssues: 1 },
+    { id: "west-yard", projectId: "west-yard", name: "West Yard", place: "Siding 4", radiusMeters: 200, hoursToday: 176, hoursPlanned: 200, openIssues: 4 },
+    { id: "harbor-apron", projectId: "harbor", name: "Harbor apron", place: "Berth 4", radiusMeters: 80, hoursToday: 110, hoursPlanned: 140, openIssues: 3 },
+    { id: "civic-steps", projectId: "civic", name: "Civic steps", place: "Town square", radiusMeters: 60, hoursToday: 144, hoursPlanned: 144, openIssues: 0 },
+    { id: "culvert-east", projectId: "culvert", name: "East culvert", place: "Drain corridor", radiusMeters: 120, hoursToday: 152, hoursPlanned: 160, openIssues: 2 },
+    { id: "quarry-road", projectId: "quarry", name: "Quarry road", place: "Haul road B", radiusMeters: 250, hoursToday: 0, hoursPlanned: 24, openIssues: 1 },
+    { id: "pump-house", projectId: "pump", name: "Pump house", place: "Service yard", radiusMeters: 100, hoursToday: 0, hoursPlanned: 16, openIssues: 2 },
+    { id: "embankment", projectId: "embank", name: "North embankment", place: "Chainage 4.2", radiusMeters: 180, hoursToday: 0, hoursPlanned: 0, openIssues: 1 },
+  ],
+  roster: roster(
+    northlineSites,
+    northlineTrades,
+    [
+      [5, 4, 3, 2, 10, 2, 2],
+      [4, 3, 2, 2, 8, 2, 1],
+      [4, 4, 3, 2, 8, 2, 1],
+      [3, 2, 2, 1, 6, 1, 1],
+      [3, 2, 2, 1, 8, 1, 1],
+      [3, 3, 2, 3, 6, 1, 2],
+    ],
+    [
+      [6, 5, 4, 2, 10, 3, 2],
+      [4, 4, 2, 2, 8, 2, 2],
+      [5, 4, 3, 3, 9, 2, 2],
+      [3, 2, 2, 2, 8, 1, 2],
+      [3, 2, 2, 1, 8, 1, 1],
+      [3, 3, 3, 2, 9, 1, 3],
+    ],
+  ),
+  attendance: [
+    { date: "2026-11-03", onSite: 132, expected: 146 },
+    { date: "2026-11-04", onSite: 128, expected: 146 },
+    { date: "2026-11-05", onSite: 140, expected: 146 },
+    { date: "2026-11-06", onSite: 136, expected: 146 },
+    { date: "2026-11-07", onSite: 74, expected: 80 },
+    { date: "2026-11-08", onSite: 12, expected: 16 },
+    { date: "2026-11-09", onSite: 128, expected: 146 },
+  ],
+  exceptions: [
+    { id: "ex-1", date: "2026-11-09", siteId: "harbor-apron", projectId: "harbor", kind: "outside-radius", count: 3, detail: "Three check-ins were recorded beyond the 80 m harbor radius." },
+    { id: "ex-2", date: "2026-11-09", siteId: "west-yard", projectId: "west-yard", kind: "late", count: 2, detail: "Two labour check-ins were after the 08:15 site start." },
+    { id: "ex-3", date: "2026-11-09", siteId: "gate-north", projectId: "river-gate", kind: "missed-checkout", count: 1, detail: "One carpenter has no checkout from the previous shift." },
+  ],
+  stock: [
+    { id: "stk-cement", sku: "OPC-43", name: "OPC cement", siteId: "west-yard", onHand: 48, reorder: 80, unit: "bags" },
+    { id: "stk-rebar", sku: "RB-16", name: "Rebar 16 mm", siteId: "gate-north", onHand: 2400, reorder: 1500, unit: "kg" },
+    { id: "stk-ply", sku: "PLY-18", name: "Formwork ply", siteId: "harbor-apron", onHand: 18, reorder: 40, unit: "sheets" },
+    { id: "stk-diesel", sku: "DSL", name: "Diesel", siteId: "culvert-east", onHand: 640, reorder: 500, unit: "L" },
+    { id: "stk-wire", sku: "BW-12", name: "Binding wire", siteId: "quarry-road", onHand: 8, reorder: 12, unit: "coils" },
+    { id: "stk-sand", sku: "SND-C", name: "Concrete sand", siteId: "civic-steps", onHand: 12, reorder: 30, unit: "m³" },
+  ],
+  approvals: [
+    { id: "ap-1", kind: "Purchase order", title: "PO-1842 structural steel", projectId: "river-gate", amount: 186400, requestedBy: "R. Kapoor", status: "pending", date: "2026-11-09" },
+    { id: "ap-2", kind: "Leave", title: "Two-day leave, S. Iyer", projectId: "west-yard", amount: null, requestedBy: "S. Iyer", status: "pending", date: "2026-11-08" },
+    { id: "ap-3", kind: "Stock adjustment", title: "Cement count minus 12 bags", projectId: "west-yard", amount: null, requestedBy: "Yard store", status: "pending", date: "2026-11-09" },
+    { id: "ap-4", kind: "Contractor bill", title: "Harbor electrical first fix", projectId: "harbor", amount: 42000, requestedBy: "Quay Electricals", status: "pending", date: "2026-11-07" },
+    { id: "ap-5", kind: "Purchase order", title: "PO-1790 diesel bowser", projectId: "culvert", amount: 86000, requestedBy: "Plant desk", status: "approved", date: "2026-11-04" },
+  ],
+  transactions: [
+    { id: "tx-1", date: "2026-11-09", reference: "PV-4418", kind: "Supplier payment", projectId: "river-gate", amount: 240000, counterparty: "Mileform Steel" },
+    { id: "tx-2", date: "2026-11-08", reference: "PV-4412", kind: "Plant hire", projectId: "west-yard", amount: 64000, counterparty: "Siding Plant Co." },
+    { id: "tx-3", date: "2026-11-07", reference: "RV-2201", kind: "Client receipt", projectId: "civic", amount: 150000, counterparty: "Town works account" },
+    { id: "tx-4", date: "2026-11-06", reference: "PV-4404", kind: "Subcontract", projectId: "harbor", amount: 42000, counterparty: "Quay Electricals" },
+    { id: "tx-5", date: "2026-11-05", reference: "PV-4390", kind: "Materials", projectId: "culvert", amount: 28500, counterparty: "Drainway Aggregates" },
+    { id: "tx-6", date: "2026-11-03", reference: "PV-4377", kind: "Fuel", projectId: "culvert", amount: 18600, counterparty: "North fuel depot" },
+    { id: "tx-7", date: "2026-09-12", reference: "PV-4102", kind: "Mobilisation", projectId: "pump", amount: 25000, counterparty: "Pump House B advance" },
+  ],
+  activities: [
+    { id: "ac-1", date: "2026-11-09", time: "07:42", projectId: "harbor", siteId: "harbor-apron", actor: "Gate reader", text: "Three check-ins stored outside the configured radius." },
+    { id: "ac-2", date: "2026-11-09", time: "08:05", projectId: "west-yard", siteId: "west-yard", actor: "Yard store", text: "Cement bay counted at 48 bags, below the reorder point." },
+    { id: "ac-3", date: "2026-11-09", time: "09:10", projectId: "river-gate", siteId: "gate-north", actor: "R. Kapoor", text: "PO-1842 submitted for structural steel." },
+    { id: "ac-4", date: "2026-11-08", time: "16:40", projectId: "civic", siteId: "civic-steps", actor: "Finishing lead", text: "Handrail inspection closed with no snag." },
+    { id: "ac-5", date: "2026-11-08", time: "11:15", projectId: "culvert", siteId: "culvert-east", actor: "Plant desk", text: "Diesel issue of 180 L posted to the culvert bowser." },
+    { id: "ac-6", date: "2026-11-07", time: "15:02", projectId: "quarry", siteId: "quarry-road", actor: "Section engineer", text: "Crew held at East Culvert. Quarry road had no attendance." },
+    { id: "ac-7", date: "2026-09-12", time: "10:00", projectId: "pump", siteId: "pump-house", actor: "Commercial", text: "Mobilisation advance recorded. Outside the default week." },
+  ],
+  alerts: [
+    { id: "al-1", severity: "critical", title: "Check-ins outside radius", detail: "Harbor apron, 3 workers, 80 m radius.", projectId: "harbor", siteId: "harbor-apron", date: "2026-11-09" },
+    { id: "al-2", severity: "warning", title: "Cement below reorder", detail: "West Yard holds 48 bags against an 80 bag reorder.", projectId: "west-yard", siteId: "west-yard", date: "2026-11-09" },
+    { id: "al-3", severity: "warning", title: "No crew at Quarry Access", detail: "24 hours were planned and none were recorded.", projectId: "quarry", siteId: "quarry-road", date: "2026-11-09" },
+    { id: "al-4", severity: "info", title: "Civic Stairs closes in 12 days", detail: "Practical completion is dated 21 Nov 2026.", projectId: "civic", siteId: "civic-steps", date: "2026-11-09" },
+  ],
+  people: [
+    { id: "p-1", name: "Asha Menon", role: "Operations director", kind: "employee", projectId: "river-gate", siteId: "gate-north", fictional: true },
+    { id: "p-2", name: "R. Kapoor", role: "Project manager", kind: "employee", projectId: "river-gate", siteId: "gate-south", fictional: true },
+    { id: "p-3", name: "S. Iyer", role: "Site supervisor", kind: "supervisor", projectId: "west-yard", siteId: "west-yard", fictional: true },
+    { id: "p-4", name: "Leela Das", role: "Storekeeper", kind: "employee", projectId: "west-yard", siteId: "west-yard", fictional: true },
+    { id: "p-5", name: "Imran Shah", role: "Carpenter", kind: "labour", projectId: "river-gate", siteId: "gate-north", fictional: true },
+    { id: "p-6", name: "Quay Electricals", role: "Electrical contractor", kind: "contractor", projectId: "harbor", siteId: "harbor-apron", fictional: true },
+    { id: "p-7", name: "N. Borges", role: "Section engineer", kind: "supervisor", projectId: "quarry", siteId: "quarry-road", fictional: true },
+    { id: "p-8", name: "Mina Paul", role: "Finishing lead", kind: "supervisor", projectId: "civic", siteId: "civic-steps", fictional: true },
+  ],
+  notifications: [
+    { id: "n-1", title: "Radius exceptions at Harbor apron", body: "Three check-ins need a supervisor review. The original coordinates would be kept if attendance were live.", date: "2026-11-09", time: "07:46", href: "/attendance" },
+    { id: "n-2", title: "PO-1842 is waiting", body: "Structural steel for River Gate Bridge has not been released.", date: "2026-11-09", time: "09:12", href: "/procurement" },
+    { id: "n-3", title: "Cement reorder", body: "West Yard is below the reorder point.", date: "2026-11-09", time: "08:06", href: "/inventory" },
+    { id: "n-4", title: "Civic Stairs inspection", body: "Handrail inspection closed with no snag.", date: "2026-11-08", time: "16:44", href: "/safety" },
+    { id: "n-5", title: "Client receipt posted", body: "RV-2201 was recorded against Civic Stairs.", date: "2026-11-07", time: "13:20", href: "/finance" },
+  ],
+};
+
+const fieldwork: DevCompany = {
+  origin: "development",
+  id: "fieldwork",
+  name: "Fieldwork Atelier",
+  legalName: "Fieldwork Atelier Development Tenant",
+  currency: "USD",
+  locale: "en-US",
+  datasetNote: "A second fictional tenant, used to prove company switching. Not a customer record.",
+  user: {
+    id: "u-helen",
+    name: "Helen Ward",
+    role: "Studio lead",
+    email: "helen.ward@fieldwork.example",
+    fictional: true,
+  },
+  workspaces: [
+    { id: "operations", name: "Operations", lens: "operations" },
+    { id: "commercial", name: "Commercial", lens: "commercial" },
+    { id: "assurance", name: "Assurance", lens: "assurance" },
+  ],
+  projects: [
+    { id: "kiln", code: "FA-04", name: "Kiln Hall", status: "active", progress: 47, budget: 820000, spent: 390000, siteIds: ["kiln-hall"], start: "2026-03-02", finish: "2026-12-15" },
+    { id: "gallery", code: "FA-06", name: "Gallery wing", status: "mobilising", progress: 12, budget: 260000, spent: 28000, siteIds: ["gallery-wing"], start: "2026-10-01", finish: "2027-05-20" },
+    { id: "courtyard", code: "FA-02", name: "Courtyard wall", status: "closing", progress: 93, budget: 140000, spent: 132000, siteIds: ["courtyard"], start: "2026-04-14", finish: "2026-11-18" },
+  ],
+  sites: [
+    { id: "kiln-hall", projectId: "kiln", name: "Kiln hall", place: "North range", radiusMeters: 40, hoursToday: 148, hoursPlanned: 160, openIssues: 1 },
+    { id: "gallery-wing", projectId: "gallery", name: "Gallery wing", place: "East range", radiusMeters: 35, hoursToday: 84, hoursPlanned: 96, openIssues: 2 },
+    { id: "courtyard", projectId: "courtyard", name: "Courtyard", place: "Inner court", radiusMeters: 25, hoursToday: 40, hoursPlanned: 40, openIssues: 0 },
+  ],
+  roster: roster(
+    ["kiln-hall", "gallery-wing", "courtyard"],
+    ["Makers", "Labour", "Supervisors"],
+    [
+      [8, 10, 2],
+      [4, 6, 1],
+      [2, 2, 1],
+    ],
+    [
+      [8, 12, 2],
+      [5, 7, 1],
+      [2, 3, 1],
+    ],
+  ),
+  attendance: [
+    { date: "2026-11-03", onSite: 34, expected: 41 },
+    { date: "2026-11-04", onSite: 36, expected: 41 },
+    { date: "2026-11-05", onSite: 38, expected: 41 },
+    { date: "2026-11-06", onSite: 33, expected: 41 },
+    { date: "2026-11-07", onSite: 10, expected: 12 },
+    { date: "2026-11-08", onSite: 0, expected: 0 },
+    { date: "2026-11-09", onSite: 36, expected: 41 },
+  ],
+  exceptions: [
+    { id: "fx-1", date: "2026-11-09", siteId: "gallery-wing", projectId: "gallery", kind: "outside-radius", count: 1, detail: "One maker checked in 12 m beyond the 35 m gallery radius." },
+  ],
+  stock: [
+    { id: "f-lime", sku: "LIME-H", name: "Hydraulic lime", siteId: "kiln-hall", onHand: 6, reorder: 16, unit: "bags" },
+    { id: "f-oak", sku: "OAK-25", name: "Oak boards", siteId: "gallery-wing", onHand: 42, reorder: 20, unit: "m" },
+    { id: "f-stone", sku: "LST-01", name: "Limestone", siteId: "courtyard", onHand: 3, reorder: 4, unit: "pallets" },
+  ],
+  approvals: [
+    { id: "fa-1", kind: "Purchase order", title: "PO-88 lime and sand", projectId: "kiln", amount: 6400, requestedBy: "Store", status: "pending", date: "2026-11-09" },
+    { id: "fa-2", kind: "Contractor bill", title: "Scaffold week 18", projectId: "gallery", amount: 2100, requestedBy: "North Scaffold", status: "approved", date: "2026-11-02" },
+  ],
+  transactions: [
+    { id: "ft-1", date: "2026-11-06", reference: "PV-118", kind: "Materials", projectId: "kiln", amount: 4800, counterparty: "Lime Merchants" },
+    { id: "ft-2", date: "2026-11-04", reference: "RV-40", kind: "Client receipt", projectId: "courtyard", amount: 18000, counterparty: "Estate account" },
+    { id: "ft-3", date: "2026-09-02", reference: "PV-090", kind: "Mobilisation", projectId: "gallery", amount: 3000, counterparty: "Gallery advance" },
+  ],
+  activities: [
+    { id: "fac-1", date: "2026-11-09", time: "08:20", projectId: "gallery", siteId: "gallery-wing", actor: "Site lead", text: "One check-in stored outside the gallery radius." },
+    { id: "fac-2", date: "2026-11-09", time: "09:00", projectId: "kiln", siteId: "kiln-hall", actor: "Store", text: "Hydraulic lime counted at 6 bags." },
+    { id: "fac-3", date: "2026-11-06", time: "14:10", projectId: "courtyard", siteId: "courtyard", actor: "Helen Ward", text: "Pointing sample accepted for the courtyard wall." },
+  ],
+  alerts: [
+    { id: "fal-1", severity: "warning", title: "Lime below reorder", detail: "Kiln hall holds 6 bags against a 16 bag reorder.", projectId: "kiln", siteId: "kiln-hall", date: "2026-11-09" },
+    { id: "fal-2", severity: "critical", title: "Check-in outside radius", detail: "Gallery wing, 1 maker, 35 m radius.", projectId: "gallery", siteId: "gallery-wing", date: "2026-11-09" },
+  ],
+  people: [
+    { id: "fp-1", name: "Helen Ward", role: "Studio lead", kind: "employee", projectId: "kiln", siteId: "kiln-hall", fictional: true },
+    { id: "fp-2", name: "Owen Clarke", role: "Maker", kind: "labour", projectId: "kiln", siteId: "kiln-hall", fictional: true },
+    { id: "fp-3", name: "North Scaffold", role: "Scaffold contractor", kind: "contractor", projectId: "gallery", siteId: "gallery-wing", fictional: true },
+    { id: "fp-4", name: "Priya Sen", role: "Site supervisor", kind: "supervisor", projectId: "courtyard", siteId: "courtyard", fictional: true },
+  ],
+  notifications: [
+    { id: "fn-1", title: "Gallery radius exception", body: "One check-in sits outside the 35 m radius.", date: "2026-11-09", time: "08:22", href: "/attendance" },
+    { id: "fn-2", title: "Lime reorder", body: "Kiln hall is below the reorder point.", date: "2026-11-09", time: "09:05", href: "/inventory" },
+  ],
+};
+
+export const developmentCompanies: DevCompany[] = [northline, fieldwork];
+
+export function getDevelopmentCompany(id: string) {
+  return developmentCompanies.find((company) => company.id === id) ?? developmentCompanies[0];
+}

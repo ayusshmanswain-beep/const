@@ -1,0 +1,2319 @@
+// ==============================================================================
+// CONSTRUCT360 ENTERPRISE PRISMA ORM SCHEMA
+// Architecture: Multi-Tenant Enterprise Construction Operations & ERP
+// Engine: PostgreSQL 15+ with PostGIS 3+
+// ==============================================================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis, uuidOssp(map: "uuid-ossp"), pgcrypto]
+}
+
+// ------------------------------------------------------------------------------
+// ENUMS
+// ------------------------------------------------------------------------------
+
+enum EmployeeStatus {
+  ACTIVE
+  PROBATION
+  ON_NOTICE
+  TERMINATED
+  RESIGNED
+
+  @@map("employee_status")
+}
+
+enum ContractorType {
+  GENERAL
+  CIVIL_WORKS
+  ELECTRICAL
+  PLUMBING
+  HVAC
+  REBAR
+  MASONRY
+  LABOUR_SUPPLY
+
+  @@map("contractor_type")
+}
+
+enum LabourSkillLevel {
+  UNSKILLED
+  SEMI_SKILLED
+  SKILLED
+  HIGHLY_SKILLED
+
+  @@map("labour_skill_level")
+}
+
+enum LabourTrade {
+  MASON
+  CARPENTER
+  BAR_BENDER
+  ELECTRICIAN
+  PLUMBER
+  PAINTER
+  WELDER
+  SCAFFOLDER
+  EQUIPMENT_OPERATOR
+  SURVEY_HELPER
+  GENERAL_HELPER
+  OTHER
+
+  @@map("labour_trade")
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  ARCHIVED
+
+  @@map("project_status")
+}
+
+enum SiteStatus {
+  PREPARATION
+  ACTIVE_CONSTRUCTION
+  FINISHING
+  HANDOVER
+  MAINTENANCE
+  CLOSED
+
+  @@map("site_status")
+}
+
+enum GeofenceType {
+  CIRCULAR
+  POLYGON
+
+  @@map("geofence_type")
+}
+
+enum AssigneeType {
+  EMPLOYEE
+  LABOURER
+  CONTRACTOR
+
+  @@map("assignee_type")
+}
+
+enum AttendanceSessionStatus {
+  PRESENT
+  HALF_DAY
+  ABSENT
+  OVERTIME
+  ON_LEAVE
+  REGULARIZED
+
+  @@map("attendance_session_status")
+}
+
+enum AttendanceVerificationStatus {
+  VERIFIED
+  FLAGGED
+  REJECTED
+  REQUIRES_APPROVAL
+
+  @@map("attendance_verification_status")
+}
+
+enum ApprovalState {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+
+  @@map("approval_state")
+}
+
+enum AttendanceEventType {
+  CLOCK_IN
+  CLOCK_OUT
+  BREAK_START
+  BREAK_END
+  SITE_TRANSFER
+
+  @@map("attendance_event_type")
+}
+
+enum PunchSource {
+  MOBILE_APP
+  KIOSK_FACIAL
+  BIOMETRIC_DEVICE
+  SUPERVISOR_PORTAL
+  AUTO_CHECKOUT
+
+  @@map("punch_source")
+}
+
+enum VerificationMethod {
+  GEOFENCE_ONLY
+  FACE_RECOGNITION
+  BIOMETRIC_FINGERPRINT
+  QR_CODE_SCAN
+  SUPERVISOR_OVERRIDE
+
+  @@map("verification_method")
+}
+
+enum CorrectionType {
+  MISSING_CLOCK_IN
+  MISSING_CLOCK_OUT
+  WRONG_HOURS
+  GEOFENCE_BYPASS_REQUEST
+  DUTY_TRAVEL
+
+  @@map("correction_type")
+}
+
+enum PayrollCycle {
+  WEEKLY
+  FORTNIGHTLY
+  MONTHLY
+
+  @@map("payroll_cycle")
+}
+
+enum WarehouseType {
+  CENTRAL
+  SITE_STORE
+  LAYDOWN_YARD
+  SCRAP_YARD
+  TRANSIT
+
+  @@map("warehouse_type")
+}
+
+enum StockTransactionType {
+  RECEIPT_PO
+  ISSUE_PROJECT
+  TRANSFER_OUT
+  TRANSFER_IN
+  RETURN_SUPPLIER
+  RETURN_SITE
+  WASTAGE_DAMAGE
+  ADJUSTMENT_PHYSICAL
+
+  @@map("stock_transaction_type")
+}
+
+enum PoStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  PARTIALLY_RECEIVED
+  COMPLETED
+  CANCELLED
+
+  @@map("po_status")
+}
+
+enum GrnStatus {
+  DRAFT
+  INSPECTED
+  ACCEPTED
+  REJECTED
+
+  @@map("grn_status")
+}
+
+enum InvoiceType {
+  CLIENT_BILLING
+  VENDOR_INVOICE
+  SUBCONTRACTOR_BILL
+
+  @@map("invoice_type")
+}
+
+enum PaymentMode {
+  BANK_TRANSFER_NEFT
+  RTGS
+  IMPS
+  CHEQUE
+  UPI
+  CASH
+  CREDIT_CARD
+
+  @@map("payment_mode")
+}
+
+enum PaymentDirection {
+  INCOMING
+  OUTGOING
+
+  @@map("payment_direction")
+}
+
+enum EquipmentOwnership {
+  OWNED
+  HIRED
+  LEASED
+
+  @@map("equipment_ownership")
+}
+
+enum EquipmentStatus {
+  AVAILABLE
+  DEPLOYED
+  UNDER_MAINTENANCE
+  BREAKDOWN
+  DECOMMISSIONED
+
+  @@map("equipment_status")
+}
+
+enum MeterType {
+  HOURS
+  KILOMETERS
+
+  @@map("meter_type")
+}
+
+enum MaintenanceType {
+  PREVENTIVE
+  BREAKDOWN
+  INSPECTION
+
+  @@map("maintenance_type")
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  REVIEW
+  COMPLETED
+  BLOCKED
+
+  @@map("task_status")
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+
+  @@map("task_priority")
+}
+
+enum IncidentType {
+  NEAR_MISS
+  FIRST_AID
+  MEDICAL_TREATMENT
+  LOST_TIME_INJURY
+  FATALITY
+  PROPERTY_DAMAGE
+  ENVIRONMENTAL
+
+  @@map("incident_type")
+}
+
+enum SeverityLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+
+  @@map("severity_level")
+}
+
+enum InspectionResult {
+  PASSED
+  FAILED
+  PASSED_WITH_CONDITIONS
+
+  @@map("inspection_result")
+}
+
+enum DocumentCategory {
+  ARCHITECTURAL_DRAWING
+  STRUCTURAL_DRAWING
+  BIM_MODEL
+  CONTRACT
+  PERMIT
+  SAFETY_CERTIFICATE
+  INVOICE_COPY
+  OTHER
+
+  @@map("document_category")
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+  PUSH
+
+  @@map("notification_channel")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 1: COMPANIES & BRANCHES
+// ------------------------------------------------------------------------------
+
+model Company {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code               String   @unique @db.VarChar(50)
+  legalName          String   @map("legal_name") @db.VarChar(255)
+  tradeName          String?  @map("trade_name") @db.VarChar(255)
+  taxId              String?  @map("tax_id") @db.VarChar(50)
+  registrationNumber String?  @map("registration_number") @db.VarChar(100)
+  currency           String   @default("INR") @db.VarChar(3)
+  email              String   @db.VarChar(255)
+  phone              String?  @db.VarChar(30)
+  website            String?  @db.VarChar(255)
+  logoUrl            String?  @map("logo_url")
+  timezone           String   @default("Asia/Kolkata") @db.VarChar(50)
+  settings           Json     @default("{}")
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  branches             Branch[]
+  userMemberships      UserCompanyMembership[]
+  roles                Role[]
+  userRoles            UserRole[]
+  departments          Department[]
+  designations         Designation[]
+  employees            Employee[]
+  contractors          Contractor[]
+  labourers            Labourer[]
+  projects             Project[]
+  sites                Site[]
+  siteGeofences        SiteGeofence[]
+  siteAssignments      SiteAssignment[]
+  shifts               Shift[]
+  shiftRosters         ShiftRoster[]
+  attendanceSessions   AttendanceSession[]
+  attendanceEvents     AttendanceEvent[]
+  locationEvents       LocationEvent[]
+  attendanceCorrections AttendanceCorrection[]
+  attendanceApprovals  AttendanceApproval[]
+  leaveTypes           LeaveType[]
+  leaveBalances        LeaveBalance[]
+  leaveRequests        LeaveRequest[]
+  salaryStructures     SalaryStructure[]
+  payrollRuns          PayrollRun[]
+  payslips             Payslip[]
+  unitsOfMeasure       UnitOfMeasure[]
+  materialCategories   MaterialCategory[]
+  materials            Material[]
+  warehouses           Warehouse[]
+  stockTransactions    StockTransaction[]
+  stockBalances        StockBalance[]
+  suppliers            Supplier[]
+  purchaseOrders       PurchaseOrder[]
+  purchaseReceipts     PurchaseReceipt[]
+  expenseCategories    ExpenseCategory[]
+  expenses             Expense[]
+  invoices             Invoice[]
+  payments             Payment[]
+  equipment            Equipment[]
+  equipmentDeployments EquipmentDeployment[]
+  maintenanceSchedules MaintenanceSchedule[]
+  maintenanceLogs      MaintenanceLog[]
+  tasks                Task[]
+  taskDependencies     TaskDependency[]
+  dprs                 DailyProgressReport[]
+  safetyIncidents      SafetyIncident[]
+  inspectionTemplates  QualityInspectionTemplate[]
+  qualityInspections   QualityInspection[]
+  qualityDefects       QualityDefect[]
+  documents            Document[]
+  notifications        Notification[]
+  approvalWorkflows    ApprovalWorkflow[]
+  approvalInstances    ApprovalInstance[]
+  auditLogs            AuditLog[]
+
+  @@map("companies")
+}
+
+model Branch {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  code           String   @db.VarChar(50)
+  name           String   @db.VarChar(255)
+  email          String?  @db.VarChar(255)
+  phone          String?  @db.VarChar(30)
+  addressLine1   String   @map("address_line1")
+  addressLine2   String?  @map("address_line2")
+  city           String   @db.VarChar(100)
+  state          String   @db.VarChar(100)
+  country        String   @default("India") @db.VarChar(100)
+  postalCode     String   @map("postal_code") @db.VarChar(20)
+  isHeadquarters Boolean  @default(false) @map("is_headquarters")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company         Company                 @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  userMemberships UserCompanyMembership[]
+  employees       Employee[]
+  projects        Project[]
+
+  @@unique([companyId, code], map: "uq_branches_company_code")
+  @@index([companyId], map: "idx_branches_company")
+  @@map("branches")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 2: USERS & AUTHENTICATION
+// ------------------------------------------------------------------------------
+
+model User {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email           String    @unique @db.VarChar(255)
+  phoneNumber     String?   @unique @map("phone_number") @db.VarChar(30)
+  passwordHash    String    @map("password_hash") @db.VarChar(255)
+  fullName        String    @map("full_name") @db.VarChar(255)
+  avatarUrl       String?   @map("avatar_url")
+  isActive        Boolean   @default(true) @map("is_active")
+  isEmailVerified Boolean   @default(false) @map("is_email_verified")
+  mfaEnabled      Boolean   @default(false) @map("mfa_enabled")
+  mfaSecret       String?   @map("mfa_secret") @db.VarChar(255)
+  lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz
+  lastLoginIp     String?   @map("last_login_ip") @db.VarChar(45)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  memberships           UserCompanyMembership[]
+  sessions              UserSession[]
+  userRoles             UserRole[]
+  employeeProfile       Employee?
+  approvedSessions      AttendanceSession[]     @relation("ApprovedSessions")
+  requestedCorrections  AttendanceCorrection[]  @relation("CorrectionRequester")
+  reviewedCorrections   AttendanceCorrection[]  @relation("CorrectionReviewer")
+  attendanceApprovals   AttendanceApproval[]    @relation("AttendanceApprover")
+  approvedLeaves        LeaveRequest[]          @relation("LeaveApprover")
+  processedPayrollRuns  PayrollRun[]            @relation("PayrollProcessor")
+  transactedStock       StockTransaction[]      @relation("StockTransactor")
+  createdPOs            PurchaseOrder[]         @relation("POCreator")
+  approvedPOs           PurchaseOrder[]         @relation("POApprover")
+  receivedGRNs          PurchaseReceipt[]       @relation("GRNReceiver")
+  claimedExpenses       Expense[]               @relation("ExpenseClaimant")
+  approvedExpenses      Expense[]               @relation("ExpenseApprover")
+  recordedPayments      Payment[]               @relation("PaymentRecorder")
+  approvedDPRs          DailyProgressReport[]   @relation("DPRApprover")
+  reportedIncidents     SafetyIncident[]        @relation("IncidentReporter")
+  uploadedDocuments     Document[]              @relation("DocUploader")
+  uploadedVersions      DocumentVersion[]       @relation("VersionUploader")
+  notifications         Notification[]
+  assignedApprovalSteps ApprovalStep[]          @relation("StepAssignee")
+  approvalActionLogs    ApprovalActionLog[]     @relation("ActionLogger")
+  auditLogs             AuditLog[]              @relation("AuditActor")
+
+  @@index([email], map: "idx_users_email")
+  @@map("users")
+}
+
+model UserCompanyMembership {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  companyId       String   @map("company_id") @db.Uuid
+  defaultBranchId String?  @map("default_branch_id") @db.Uuid
+  isDefault       Boolean  @default(false) @map("is_default")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company       Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  defaultBranch Branch?  @relation(fields: [defaultBranchId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, companyId], map: "uq_user_company")
+  @@index([userId], map: "idx_user_memberships_user")
+  @@index([companyId], map: "idx_user_memberships_company")
+  @@map("user_company_memberships")
+}
+
+model UserSession {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  refreshTokenHash String    @unique @map("refresh_token_hash") @db.VarChar(255)
+  ipAddress        String?   @map("ip_address") @db.VarChar(45)
+  userAgent        String?   @map("user_agent")
+  deviceId         String?   @map("device_id") @db.VarChar(255)
+  expiresAt        DateTime  @map("expires_at") @db.Timestamptz
+  revokedAt        DateTime? @map("revoked_at") @db.Timestamptz
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_user_sessions_user")
+  @@index([refreshTokenHash], map: "idx_user_sessions_token")
+  @@map("user_sessions")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 3: ROLES & PERMISSIONS
+// ------------------------------------------------------------------------------
+
+model Role {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId    String?  @map("company_id") @db.Uuid
+  name         String   @db.VarChar(100)
+  slug         String   @db.VarChar(100)
+  description  String?
+  isSystemRole Boolean  @default(false) @map("is_system_role")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company       Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  permissions   RolePermission[]
+  userRoles     UserRole[]
+  approvalSteps ApprovalStep[]
+
+  @@unique([companyId, slug], map: "uq_roles_company_slug")
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category    String   @db.VarChar(100)
+  action      String   @db.VarChar(100)
+  resource    String   @db.VarChar(100)
+  code        String   @unique @db.VarChar(150)
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String   @map("role_id") @db.Uuid
+  permissionId String   @map("permission_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  roleId    String   @map("role_id") @db.Uuid
+  projectId String?  @map("project_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  company Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role    Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, userId, roleId, projectId], map: "uq_user_role_assignment")
+  @@index([companyId, userId], map: "idx_user_roles_lookup")
+  @@map("user_roles")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 4: EMPLOYEES
+// ------------------------------------------------------------------------------
+
+model Department {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  code      String   @db.VarChar(50)
+  name      String   @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  employees Employee[]
+
+  @@unique([companyId, code], map: "uq_departments_company_code")
+  @@map("departments")
+}
+
+model Designation {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  title     String   @db.VarChar(100)
+  level     Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  employees Employee[]
+
+  @@unique([companyId, title], map: "uq_designations_company_title")
+  @@map("designations")
+}
+
+model Employee {
+  id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId             String         @map("company_id") @db.Uuid
+  branchId              String?        @map("branch_id") @db.Uuid
+  userId                String?        @unique @map("user_id") @db.Uuid
+  departmentId          String?        @map("department_id") @db.Uuid
+  designationId         String?        @map("designation_id") @db.Uuid
+  reportingManagerId    String?        @map("reporting_manager_id") @db.Uuid
+  employeeCode          String         @map("employee_code") @db.VarChar(50)
+  firstName             String         @map("first_name") @db.VarChar(100)
+  lastName              String         @map("last_name") @db.VarChar(100)
+  email                 String?        @db.VarChar(255)
+  phone                 String         @db.VarChar(30)
+  emergencyContactName  String?        @map("emergency_contact_name") @db.VarChar(100)
+  emergencyContactPhone String?        @map("emergency_contact_phone") @db.VarChar(30)
+  dateOfBirth           DateTime?      @map("date_of_birth") @db.Date
+  gender                String?        @db.VarChar(20)
+  joiningDate           DateTime       @map("joining_date") @db.Date
+  exitDate              DateTime?      @map("exit_date") @db.Date
+  status                EmployeeStatus @default(ACTIVE)
+  photoUrl              String?        @map("photo_url")
+  createdAt             DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company              Company               @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  branch               Branch?               @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  user                 User?                 @relation(fields: [userId], references: [id], onDelete: SetNull)
+  department           Department?           @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  designation          Designation?          @relation(fields: [designationId], references: [id], onDelete: SetNull)
+  reportingManager     Employee?             @relation("ManagerSubordinates", fields: [reportingManagerId], references: [id], onDelete: SetNull)
+  subordinates         Employee[]            @relation("ManagerSubordinates")
+  engineeredSites      Site[]                @relation("SiteEngineer")
+  siteAssignments      SiteAssignment[]
+  shiftRosters         ShiftRoster[]
+  attendanceSessions   AttendanceSession[]
+  attendanceEvents     AttendanceEvent[]
+  locationEvents       LocationEvent[]
+  leaveBalances        LeaveBalance[]
+  leaveRequests        LeaveRequest[]
+  salaryStructure      SalaryStructure?
+  payslips             Payslip[]
+  managedWarehouses    Warehouse[]           @relation("Storekeeper")
+  operatedDeployments  EquipmentDeployment[] @relation("EquipmentOperator")
+  leadTasks            Task[]                @relation("TaskLead")
+  authoredDPRs         DailyProgressReport[] @relation("DPREngineer")
+  conductedInspections QualityInspection[]   @relation("QualityInspector")
+
+  @@unique([companyId, employeeCode], map: "uq_employees_company_code")
+  @@index([companyId], map: "idx_employees_company")
+  @@index([companyId, status], map: "idx_employees_status")
+  @@map("employees")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 5: CONTRACTORS
+// ------------------------------------------------------------------------------
+
+model Contractor {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId      String         @map("company_id") @db.Uuid
+  contractorCode String         @map("contractor_code") @db.VarChar(50)
+  businessName   String         @map("business_name") @db.VarChar(255)
+  contractorType ContractorType @default(LABOUR_SUPPLY) @map("contractor_type")
+  contactPerson  String         @map("contact_person") @db.VarChar(100)
+  email          String?        @db.VarChar(255)
+  phone          String         @db.VarChar(30)
+  taxId          String?        @map("tax_id") @db.VarChar(50)
+  panNumber      String?        @map("pan_number") @db.VarChar(50)
+  address        String?
+  rating         Decimal?       @default(5.00) @db.Decimal(3, 2)
+  isActive       Boolean        @default(true) @map("is_active")
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company          Company            @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  labourers        Labourer[]
+  siteAssignments  SiteAssignment[]
+  invoices         Invoice[]
+  assignedTasks    Task[]
+  dprManpower      DprManpowerCount[]
+  assignedDefects  QualityDefect[]
+
+  @@unique([companyId, contractorCode], map: "uq_contractors_company_code")
+  @@index([companyId], map: "idx_contractors_company")
+  @@map("contractors")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 6: LABOURERS
+// ------------------------------------------------------------------------------
+
+model Labourer {
+  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId          String           @map("company_id") @db.Uuid
+  contractorId       String?          @map("contractor_id") @db.Uuid
+  labourerCode       String           @map("labourer_code") @db.VarChar(50)
+  firstName          String           @map("first_name") @db.VarChar(100)
+  lastName           String           @map("last_name") @db.VarChar(100)
+  phone              String?          @db.VarChar(30)
+  skillLevel         LabourSkillLevel @default(UNSKILLED) @map("skill_level")
+  primaryTrade       LabourTrade      @default(GENERAL_HELPER) @map("primary_trade")
+  dailyWageRate      Decimal          @default(0.00) @map("daily_wage_rate") @db.Decimal(10, 2)
+  overtimeHourlyRate Decimal          @default(0.00) @map("overtime_hourly_rate") @db.Decimal(10, 2)
+  idProofType        String?          @map("id_proof_type") @db.VarChar(50)
+  idProofNumber      String?          @map("id_proof_number") @db.VarChar(100)
+  emergencyPhone     String?          @map("emergency_phone") @db.VarChar(30)
+  photoUrl           String?          @map("photo_url")
+  faceEmbedding      Json?            @map("face_embedding")
+  biometricEnrolled  Boolean          @default(false) @map("biometric_enrolled")
+  isActive           Boolean          @default(true) @map("is_active")
+  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company            Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  contractor         Contractor?         @relation(fields: [contractorId], references: [id], onDelete: SetNull)
+  siteAssignments    SiteAssignment[]
+  shiftRosters       ShiftRoster[]
+  attendanceSessions AttendanceSession[]
+  attendanceEvents   AttendanceEvent[]
+  locationEvents     LocationEvent[]
+  payslips           Payslip[]
+
+  @@unique([companyId, labourerCode], map: "uq_labourers_company_code")
+  @@index([companyId], map: "idx_labourers_company")
+  @@index([contractorId], map: "idx_labourers_contractor")
+  @@index([companyId, primaryTrade], map: "idx_labourers_trade")
+  @@map("labourers")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 7: PROJECTS
+// ------------------------------------------------------------------------------
+
+model Project {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId      String        @map("company_id") @db.Uuid
+  branchId       String        @map("branch_id") @db.Uuid
+  projectCode    String        @map("project_code") @db.VarChar(50)
+  name           String        @db.VarChar(255)
+  description    String?
+  clientName     String        @map("client_name") @db.VarChar(255)
+  contractValue  Decimal       @default(0.00) @map("contract_value") @db.Decimal(15, 2)
+  budget         Decimal       @default(0.00) @db.Decimal(15, 2)
+  spentToDate    Decimal       @default(0.00) @map("spent_to_date") @db.Decimal(15, 2)
+  startDate      DateTime      @map("start_date") @db.Date
+  plannedEndDate DateTime      @map("planned_end_date") @db.Date
+  actualEndDate  DateTime?     @map("actual_end_date") @db.Date
+  status         ProjectStatus @default(PLANNING)
+  totalAreaSqft  Decimal?      @map("total_area_sqft") @db.Decimal(12, 2)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company              Company               @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  branch               Branch                @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  userRoles            UserRole[]
+  sites                Site[]
+  attendanceSessions   AttendanceSession[]
+  attendanceEvents     AttendanceEvent[]
+  locationEvents       LocationEvent[]
+  payrollRuns          PayrollRun[]
+  warehouses           Warehouse[]
+  stockTransactions    StockTransaction[]
+  purchaseOrders       PurchaseOrder[]
+  expenses             Expense[]
+  invoices             Invoice[]
+  payments             Payment[]
+  equipmentDeployments EquipmentDeployment[]
+  tasks                Task[]
+  dprs                 DailyProgressReport[]
+  safetyIncidents      SafetyIncident[]
+  qualityInspections   QualityInspection[]
+  documents            Document[]
+
+  @@unique([companyId, projectCode], map: "uq_projects_company_code")
+  @@index([companyId], map: "idx_projects_company")
+  @@index([companyId, status], map: "idx_projects_status")
+  @@map("projects")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 8: SITES
+// ------------------------------------------------------------------------------
+
+model Site {
+  id                  String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId           String                                @map("company_id") @db.Uuid
+  projectId           String                                @map("project_id") @db.Uuid
+  siteCode            String                                @map("site_code") @db.VarChar(50)
+  name                String                                @db.VarChar(255)
+  description         String?
+  siteEngineerId      String?                               @map("site_engineer_id") @db.Uuid
+  addressLine1        String                                @map("address_line1")
+  addressLine2        String?                               @map("address_line2")
+  city                String                                @db.VarChar(100)
+  state               String                                @db.VarChar(100)
+  postalCode          String                                @map("postal_code") @db.VarChar(20)
+  status              SiteStatus                            @default(ACTIVE_CONSTRUCTION)
+  latitude            Decimal                               @db.Decimal(10, 8)
+  longitude           Decimal                               @db.Decimal(11, 8)
+  locationCoordinates Unsupported("geography(Point, 4326)")? @map("location_coordinates")
+  createdAt           DateTime                              @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime                              @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company              Company               @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  project              Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  siteEngineer         Employee?             @relation("SiteEngineer", fields: [siteEngineerId], references: [id], onDelete: SetNull)
+  geofences            SiteGeofence[]
+  siteAssignments      SiteAssignment[]
+  shiftRosters         ShiftRoster[]
+  attendanceSessions   AttendanceSession[]
+  attendanceEvents     AttendanceEvent[]
+  locationEvents       LocationEvent[]
+  warehouses           Warehouse[]
+  stockTransactions    StockTransaction[]
+  expenses             Expense[]
+  equipmentDeployments EquipmentDeployment[]
+  tasks                Task[]
+  dprs                 DailyProgressReport[]
+  safetyIncidents      SafetyIncident[]
+  qualityInspections   QualityInspection[]
+  qualityDefects       QualityDefect[]
+  documents            Document[]
+
+  @@unique([projectId, siteCode], map: "uq_sites_project_code")
+  @@index([companyId], map: "idx_sites_company")
+  @@index([projectId], map: "idx_sites_project")
+  @@map("sites")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 9: SITE GEOFENCES (PostGIS Spatial Engine)
+// ------------------------------------------------------------------------------
+
+model SiteGeofence {
+  id              String                                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId       String                                  @map("company_id") @db.Uuid
+  siteId          String                                  @map("site_id") @db.Uuid
+  name            String                                  @db.VarChar(150)
+  geofenceType    GeofenceType                            @default(CIRCULAR) @map("geofence_type")
+  centerLatitude  Decimal?                                @map("center_latitude") @db.Decimal(10, 8)
+  centerLongitude Decimal?                                @map("center_longitude") @db.Decimal(11, 8)
+  centerPoint     Unsupported("geography(Point, 4326)")?   @map("center_point")
+  radiusMeters    Decimal?                                @map("radius_meters") @db.Decimal(10, 2)
+  polygon         Unsupported("geography(Polygon, 4326)")? @map("polygon")
+  isActive        Boolean                                 @default(true) @map("is_active")
+  metadata        Json                                    @default("{}")
+  createdAt       DateTime                                @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime                                @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company          Company           @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  site             Site              @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  attendanceEvents AttendanceEvent[]
+
+  @@index([companyId], map: "idx_site_geofences_company")
+  @@index([siteId], map: "idx_site_geofences_site")
+  @@map("site_geofences")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 10: SITE ASSIGNMENTS
+// ------------------------------------------------------------------------------
+
+model SiteAssignment {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId    String       @map("company_id") @db.Uuid
+  siteId       String       @map("site_id") @db.Uuid
+  assigneeType AssigneeType @map("assignee_type")
+  employeeId   String?      @map("employee_id") @db.Uuid
+  labourerId   String?      @map("labourer_id") @db.Uuid
+  contractorId String?      @map("contractor_id") @db.Uuid
+  roleOnSite   String?      @map("role_on_site") @db.VarChar(100)
+  assignedFrom DateTime     @map("assigned_from") @db.Date
+  assignedTo   DateTime?    @map("assigned_to") @db.Date
+  isActive     Boolean      @default(true) @map("is_active")
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company    Company     @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  site       Site        @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  employee   Employee?   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  labourer   Labourer?   @relation(fields: [labourerId], references: [id], onDelete: Cascade)
+  contractor Contractor? @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, siteId, isActive], map: "idx_site_assignments_lookup")
+  @@map("site_assignments")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 12: SHIFTS
+// ------------------------------------------------------------------------------
+
+model Shift {
+  id                      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId               String   @map("company_id") @db.Uuid
+  code                    String   @db.VarChar(50)
+  name                    String   @db.VarChar(100)
+  startTime               DateTime @map("start_time") @db.Time
+  endTime                 DateTime @map("end_time") @db.Time
+  gracePeriodMinutes      Int      @default(15) @map("grace_period_minutes")
+  breakDurationMinutes    Int      @default(60) @map("break_duration_minutes")
+  halfDayThresholdMinutes Int      @default(240) @map("half_day_threshold_minutes")
+  fullDayThresholdMinutes Int      @default(480) @map("full_day_threshold_minutes")
+  isNightShift            Boolean  @default(false) @map("is_night_shift")
+  isActive                Boolean  @default(true) @map("is_active")
+  createdAt               DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt               DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company            Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  shiftRosters       ShiftRoster[]
+  attendanceSessions AttendanceSession[]
+
+  @@unique([companyId, code], map: "uq_shifts_company_code")
+  @@index([companyId], map: "idx_shifts_company")
+  @@map("shifts")
+}
+
+model ShiftRoster {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId    String       @map("company_id") @db.Uuid
+  siteId       String       @map("site_id") @db.Uuid
+  shiftId      String       @map("shift_id") @db.Uuid
+  assigneeType AssigneeType @map("assignee_type")
+  employeeId   String?      @map("employee_id") @db.Uuid
+  labourerId   String?      @map("labourer_id") @db.Uuid
+  rosterDate   DateTime     @map("roster_date") @db.Date
+  isOffDay     Boolean      @default(false) @map("is_off_day")
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  site     Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  shift    Shift     @relation(fields: [shiftId], references: [id], onDelete: Restrict)
+  employee Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  labourer Labourer? @relation(fields: [labourerId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, siteId, rosterDate, assigneeType, employeeId, labourerId], map: "uq_shift_roster_unique")
+  @@index([companyId, siteId, rosterDate], map: "idx_shift_rosters_date")
+  @@map("shift_rosters")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 11: ATTENDANCE (Precision Spatial & Rollup Architecture)
+// ------------------------------------------------------------------------------
+
+model AttendanceSession {
+  id                   String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId            String                       @map("company_id") @db.Uuid
+  projectId            String                       @map("project_id") @db.Uuid
+  siteId               String                       @map("site_id") @db.Uuid
+  shiftId              String?                      @map("shift_id") @db.Uuid
+  workerType           AssigneeType                 @map("worker_type")
+  employeeId           String?                      @map("employee_id") @db.Uuid
+  labourerId           String?                      @map("labourer_id") @db.Uuid
+  sessionDate          DateTime                     @map("session_date") @db.Date
+  firstClockIn         DateTime?                    @map("first_clock_in") @db.Timestamptz
+  lastClockOut         DateTime?                    @map("last_clock_out") @db.Timestamptz
+  totalDurationMinutes Int                          @default(0) @map("total_duration_minutes")
+  regularMinutes       Int                          @default(0) @map("regular_minutes")
+  overtimeMinutes      Int                          @default(0) @map("overtime_minutes")
+  breakDurationMinutes Int                          @default(0) @map("break_duration_minutes")
+  status               AttendanceSessionStatus      @default(ABSENT)
+  verificationStatus   AttendanceVerificationStatus @default(VERIFIED) @map("verification_status")
+  approvalStatus       ApprovalState                @default(PENDING) @map("approval_status")
+  approvedById         String?                      @map("approved_by_id") @db.Uuid
+  approvedAt           DateTime?                    @map("approved_at") @db.Timestamptz
+  remarks              String?
+  createdAt            DateTime                     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime                     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company      Company                @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  project      Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  site         Site                   @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  shift        Shift?                 @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+  employee     Employee?              @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  labourer     Labourer?              @relation(fields: [labourerId], references: [id], onDelete: Cascade)
+  approvedBy   User?                  @relation("ApprovedSessions", fields: [approvedById], references: [id], onDelete: SetNull)
+  events       AttendanceEvent[]
+  corrections  AttendanceCorrection[]
+  approvals    AttendanceApproval[]
+
+  @@unique([companyId, sessionDate, workerType, employeeId, labourerId], map: "uq_attendance_session")
+  @@index([companyId, sessionDate], map: "idx_att_sessions_company_date")
+  @@index([siteId, sessionDate], map: "idx_att_sessions_site")
+  @@index([employeeId, sessionDate], map: "idx_att_sessions_employee")
+  @@index([labourerId, sessionDate], map: "idx_att_sessions_labourer")
+  @@map("attendance_sessions")
+}
+
+model AttendanceEvent {
+  id                             String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId                      String                                @map("company_id") @db.Uuid
+  sessionId                      String                                @map("session_id") @db.Uuid
+  projectId                      String                                @map("project_id") @db.Uuid
+  siteId                         String                                @map("site_id") @db.Uuid
+  geofenceId                     String?                               @map("geofence_id") @db.Uuid
+  workerType                     AssigneeType                          @map("worker_type")
+  employeeId                     String?                               @map("employee_id") @db.Uuid
+  labourerId                     String?                               @map("labourer_id") @db.Uuid
+  eventType                      AttendanceEventType                   @map("event_type")
+  eventTimestamp                 DateTime                              @map("event_timestamp") @db.Timestamptz
+  serverTimestamp                DateTime                              @default(now()) @map("server_timestamp") @db.Timestamptz
+  source                         PunchSource                           @default(MOBILE_APP)
+  verificationMethod             VerificationMethod                    @default(GEOFENCE_ONLY) @map("verification_method")
+  verificationResult             String                                @map("verification_result") @db.VarChar(50)
+  latitude                       Decimal                               @db.Decimal(10, 8)
+  longitude                      Decimal                               @db.Decimal(11, 8)
+  coordinates                    Unsupported("geography(Point, 4326)")? @map("coordinates")
+  gpsAccuracyMeters              Decimal                               @map("gps_accuracy_meters") @db.Decimal(8, 2)
+  calculatedDistanceMeters       Decimal                               @map("calculated_distance_meters") @db.Decimal(10, 2)
+  configuredRadiusSnapshotMeters Decimal                               @map("configured_radius_snapshot_meters") @db.Decimal(10, 2)
+  isInsideGeofence               Boolean                               @default(false) @map("is_inside_geofence")
+  isMockLocation                 Boolean                               @default(false) @map("is_mock_location")
+  photoUrl                       String?                               @map("photo_url")
+  deviceId                       String?                               @map("device_id") @db.VarChar(255)
+  deviceModel                    String?                               @map("device_model") @db.VarChar(150)
+  appVersion                     String?                               @map("app_version") @db.VarChar(50)
+  osVersion                      String?                               @map("os_version") @db.VarChar(50)
+  ipAddress                      String?                               @map("ip_address") @db.VarChar(45)
+  batteryLevelPct                Int?                                  @map("battery_level_pct")
+  notes                          String?
+  createdAt                      DateTime                              @default(now()) @map("created_at") @db.Timestamptz
+
+  company        Company           @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  session        AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  project        Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  site           Site              @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  geofence       SiteGeofence?     @relation(fields: [geofenceId], references: [id], onDelete: SetNull)
+  employee       Employee?         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  labourer       Labourer?         @relation(fields: [labourerId], references: [id], onDelete: Cascade)
+  locationEvents LocationEvent[]
+
+  @@index([sessionId], map: "idx_att_events_session")
+  @@index([companyId, eventTimestamp], map: "idx_att_events_company_time")
+  @@index([siteId, eventTimestamp], map: "idx_att_events_site")
+  @@map("attendance_events")
+}
+
+model LocationEvent {
+  id                String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId         String                                @map("company_id") @db.Uuid
+  attendanceEventId String?                               @map("attendance_event_id") @db.Uuid
+  projectId         String                                @map("project_id") @db.Uuid
+  siteId            String                                @map("site_id") @db.Uuid
+  workerType        AssigneeType                          @map("worker_type")
+  employeeId        String?                               @map("employee_id") @db.Uuid
+  labourerId        String?                               @map("labourer_id") @db.Uuid
+  recordedAt        DateTime                              @map("recorded_at") @db.Timestamptz
+  serverTimestamp   DateTime                              @default(now()) @map("server_timestamp") @db.Timestamptz
+  latitude          Decimal                               @db.Decimal(10, 8)
+  longitude         Decimal                               @db.Decimal(11, 8)
+  coordinates       Unsupported("geography(Point, 4326)")? @map("coordinates")
+  accuracyMeters    Decimal                               @map("accuracy_meters") @db.Decimal(8, 2)
+  speedMps          Decimal?                              @map("speed_mps") @db.Decimal(6, 2)
+  headingDegrees    Decimal?                              @map("heading_degrees") @db.Decimal(6, 2)
+  altitudeMeters    Decimal?                              @map("altitude_meters") @db.Decimal(8, 2)
+  isMockLocation    Boolean                               @default(false) @map("is_mock_location")
+  wifiBssid         String?                               @map("wifi_bssid") @db.VarChar(50)
+  batteryPercentage Int?                                  @map("battery_percentage")
+  createdAt         DateTime                              @default(now()) @map("created_at") @db.Timestamptz
+
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  attendanceEvent AttendanceEvent? @relation(fields: [attendanceEventId], references: [id], onDelete: SetNull)
+  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  site            Site             @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  employee        Employee?        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  labourer        Labourer?        @relation(fields: [labourerId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, recordedAt], map: "idx_loc_events_company_time")
+  @@index([siteId, recordedAt], map: "idx_loc_events_site_time")
+  @@map("location_events")
+}
+
+model AttendanceCorrection {
+  id                   String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId            String         @map("company_id") @db.Uuid
+  sessionId            String         @map("session_id") @db.Uuid
+  requestedByUserId    String         @map("requested_by_user_id") @db.Uuid
+  correctionType       CorrectionType @map("correction_type")
+  originalClockIn      DateTime?      @map("original_clock_in") @db.Timestamptz
+  originalClockOut     DateTime?      @map("original_clock_out") @db.Timestamptz
+  requestedClockIn     DateTime       @map("requested_clock_in") @db.Timestamptz
+  requestedClockOut    DateTime       @map("requested_clock_out") @db.Timestamptz
+  reason               String
+  documentAttachmentUrl String?       @map("document_attachment_url")
+  status               ApprovalState  @default(PENDING)
+  reviewedByUserId     String?        @map("reviewed_by_user_id") @db.Uuid
+  reviewedAt           DateTime?      @map("reviewed_at") @db.Timestamptz
+  reviewerComments     String?        @map("reviewer_comments")
+  createdAt            DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company             Company              @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  session             AttendanceSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  requestedByUser     User                 @relation("CorrectionRequester", fields: [requestedByUserId], references: [id], onDelete: Restrict)
+  reviewedByUser      User?                @relation("CorrectionReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+  attendanceApprovals AttendanceApproval[]
+
+  @@index([companyId], map: "idx_att_corrections_company")
+  @@index([sessionId], map: "idx_att_corrections_session")
+  @@map("attendance_corrections")
+}
+
+model AttendanceApproval {
+  id                   String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId            String        @map("company_id") @db.Uuid
+  sessionId            String?       @map("session_id") @db.Uuid
+  correctionId         String?       @map("correction_id") @db.Uuid
+  approverUserId       String        @map("approver_user_id") @db.Uuid
+  approvalTier         Int           @default(1) @map("approval_tier")
+  status               ApprovalState @default(APPROVED)
+  comments             String?
+  ipAddress            String?       @map("ip_address") @db.VarChar(45)
+  digitalSignatureHash String?       @map("digital_signature_hash") @db.VarChar(255)
+  actionTimestamp      DateTime      @default(now()) @map("action_timestamp") @db.Timestamptz
+  metadata             Json          @default("{}")
+  createdAt            DateTime      @default(now()) @map("created_at") @db.Timestamptz
+
+  company        Company               @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  session        AttendanceSession?    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  correction     AttendanceCorrection? @relation(fields: [correctionId], references: [id], onDelete: Cascade)
+  approverUser   User                  @relation("AttendanceApprover", fields: [approverUserId], references: [id], onDelete: Restrict)
+
+  @@index([sessionId], map: "idx_att_approvals_session")
+  @@index([correctionId], map: "idx_att_approvals_correction")
+  @@map("attendance_approvals")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 13: LEAVES
+// ------------------------------------------------------------------------------
+
+model LeaveType {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId           String   @map("company_id") @db.Uuid
+  code                String   @db.VarChar(50)
+  name                String   @db.VarChar(100)
+  annualDaysAllowed   Int      @default(12) @map("annual_days_allowed")
+  isCarryForward      Boolean  @default(false) @map("is_carry_forward")
+  maxCarryForwardDays Int      @default(0) @map("max_carry_forward_days")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  company       Company        @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  leaveBalances LeaveBalance[]
+  leaveRequests LeaveRequest[]
+
+  @@unique([companyId, code], map: "uq_leave_types_company_code")
+  @@map("leave_types")
+}
+
+model LeaveBalance {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId     String   @map("company_id") @db.Uuid
+  employeeId    String   @map("employee_id") @db.Uuid
+  leaveTypeId   String   @map("leave_type_id") @db.Uuid
+  year          Int
+  allocatedDays Decimal  @default(0.00) @map("allocated_days") @db.Decimal(5, 2)
+  usedDays      Decimal  @default(0.00) @map("used_days") @db.Decimal(5, 2)
+  pendingDays   Decimal  @default(0.00) @map("pending_days") @db.Decimal(5, 2)
+
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  employee  Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+
+  @@unique([companyId, employeeId, leaveTypeId, year], map: "uq_leave_balance")
+  @@map("leave_balances")
+}
+
+model LeaveRequest {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId        String        @map("company_id") @db.Uuid
+  employeeId       String        @map("employee_id") @db.Uuid
+  leaveTypeId      String        @map("leave_type_id") @db.Uuid
+  startDate        DateTime      @map("start_date") @db.Date
+  endDate          DateTime      @map("end_date") @db.Date
+  daysCount        Decimal       @map("days_count") @db.Decimal(5, 2)
+  reason           String
+  status           ApprovalState @default(PENDING)
+  approvedByUserId String?       @map("approved_by_user_id") @db.Uuid
+  approvedAt       DateTime?     @map("approved_at") @db.Timestamptz
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company        Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  employee       Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType      LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+  approvedByUser User?     @relation("LeaveApprover", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([employeeId], map: "idx_leave_requests_employee")
+  @@map("leave_requests")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 14: PAYROLL
+// ------------------------------------------------------------------------------
+
+model SalaryStructure {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId           String   @map("company_id") @db.Uuid
+  employeeId          String   @unique @map("employee_id") @db.Uuid
+  baseSalary          Decimal  @default(0.00) @map("base_salary") @db.Decimal(15, 2)
+  hra                 Decimal  @default(0.00) @db.Decimal(15, 2)
+  conveyanceAllowance Decimal  @default(0.00) @map("conveyance_allowance") @db.Decimal(15, 2)
+  siteAllowance       Decimal  @default(0.00) @map("site_allowance") @db.Decimal(15, 2)
+  specialAllowance    Decimal  @default(0.00) @map("special_allowance") @db.Decimal(15, 2)
+  pfEmployeePercent   Decimal  @default(12.00) @map("pf_employee_percent") @db.Decimal(5, 2)
+  esiEmployeePercent  Decimal  @default(0.75) @map("esi_employee_percent") @db.Decimal(5, 2)
+  professionalTax     Decimal  @default(200.00) @map("professional_tax") @db.Decimal(10, 2)
+  effectiveFrom       DateTime @map("effective_from") @db.Date
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company  Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("salary_structures")
+}
+
+model PayrollRun {
+  id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId             String        @map("company_id") @db.Uuid
+  projectId             String?       @map("project_id") @db.Uuid
+  runNumber             String        @map("run_number") @db.VarChar(50)
+  cycle                 PayrollCycle  @default(MONTHLY)
+  periodStartDate       DateTime      @map("period_start_date") @db.Date
+  periodEndDate         DateTime      @map("period_end_date") @db.Date
+  totalGrossAmount      Decimal       @default(0.00) @map("total_gross_amount") @db.Decimal(15, 2)
+  totalDeductionsAmount Decimal       @default(0.00) @map("total_deductions_amount") @db.Decimal(15, 2)
+  totalNetAmount        Decimal       @default(0.00) @map("total_net_amount") @db.Decimal(15, 2)
+  status                ApprovalState @default(PENDING)
+  processedById         String        @map("processed_by_id") @db.Uuid
+  processedAt           DateTime?     @map("processed_at") @db.Timestamptz
+  createdAt             DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company     Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  processedBy User      @relation("PayrollProcessor", fields: [processedById], references: [id], onDelete: Restrict)
+  payslips    Payslip[]
+
+  @@unique([companyId, runNumber], map: "uq_payroll_runs_number")
+  @@map("payroll_runs")
+}
+
+model Payslip {
+  id                String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId         String       @map("company_id") @db.Uuid
+  payrollRunId      String       @map("payroll_run_id") @db.Uuid
+  workerType        AssigneeType @map("worker_type")
+  employeeId        String?      @map("employee_id") @db.Uuid
+  labourerId        String?      @map("labourer_id") @db.Uuid
+  daysPresent       Decimal      @default(0.00) @map("days_present") @db.Decimal(5, 2)
+  overtimeHours     Decimal      @default(0.00) @map("overtime_hours") @db.Decimal(6, 2)
+  basicEarnings     Decimal      @default(0.00) @map("basic_earnings") @db.Decimal(15, 2)
+  allowancesTotal   Decimal      @default(0.00) @map("allowances_total") @db.Decimal(15, 2)
+  overtimeEarnings  Decimal      @default(0.00) @map("overtime_earnings") @db.Decimal(15, 2)
+  grossEarnings     Decimal      @default(0.00) @map("gross_earnings") @db.Decimal(15, 2)
+  pfDeduction       Decimal      @default(0.00) @map("pf_deduction") @db.Decimal(15, 2)
+  esiDeduction      Decimal      @default(0.00) @map("esi_deduction") @db.Decimal(15, 2)
+  taxDeduction      Decimal      @default(0.00) @map("tax_deduction") @db.Decimal(15, 2)
+  otherDeductions   Decimal      @default(0.00) @map("other_deductions") @db.Decimal(15, 2)
+  totalDeductions   Decimal      @default(0.00) @map("total_deductions") @db.Decimal(15, 2)
+  netPayable        Decimal      @default(0.00) @map("net_payable") @db.Decimal(15, 2)
+  paymentStatus     String       @default("UNPAID") @map("payment_status") @db.VarChar(50)
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  company    Company    @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  employee   Employee?  @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  labourer   Labourer?  @relation(fields: [labourerId], references: [id], onDelete: Restrict)
+
+  @@index([payrollRunId], map: "idx_payslips_run")
+  @@index([employeeId], map: "idx_payslips_employee")
+  @@index([labourerId], map: "idx_payslips_labourer")
+  @@map("payslips")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 15: MATERIALS & MASTER CATALOG
+// ------------------------------------------------------------------------------
+
+model UnitOfMeasure {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  code      String   @db.VarChar(20)
+  name      String   @db.VarChar(100)
+  symbol    String   @db.VarChar(10)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  company      Company       @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  materials    Material[]
+  dprWorkItems DprWorkItem[]
+
+  @@unique([companyId, code], map: "uq_uom_company_code")
+  @@map("units_of_measure")
+}
+
+model MaterialCategory {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId        String   @map("company_id") @db.Uuid
+  parentCategoryId String?  @map("parent_category_id") @db.Uuid
+  code             String   @db.VarChar(50)
+  name             String   @db.VarChar(150)
+  description      String?
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  company        Company            @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  parentCategory MaterialCategory?  @relation("SubCategories", fields: [parentCategoryId], references: [id], onDelete: SetNull)
+  subCategories  MaterialCategory[] @relation("SubCategories")
+  materials      Material[]
+
+  @@unique([companyId, code], map: "uq_material_cat_code")
+  @@map("material_categories")
+}
+
+model Material {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId     String   @map("company_id") @db.Uuid
+  categoryId    String   @map("category_id") @db.Uuid
+  uomId         String   @map("uom_id") @db.Uuid
+  itemCode      String   @map("item_code") @db.VarChar(50)
+  name          String   @db.VarChar(255)
+  description   String?
+  hsnSacCode    String?  @map("hsn_sac_code") @db.VarChar(50)
+  standardRate  Decimal  @default(0.0000) @map("standard_rate") @db.Decimal(15, 4)
+  reorderLevel  Decimal  @default(0.0000) @map("reorder_level") @db.Decimal(14, 4)
+  minStockLevel Decimal  @default(0.0000) @map("min_stock_level") @db.Decimal(14, 4)
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company              Company               @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  category             MaterialCategory      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  uom                  UnitOfMeasure         @relation(fields: [uomId], references: [id], onDelete: Restrict)
+  stockTransactions    StockTransaction[]
+  stockBalances        StockBalance[]
+  purchaseOrderItems   PurchaseOrderItem[]
+  purchaseReceiptItems PurchaseReceiptItem[]
+
+  @@unique([companyId, itemCode], map: "uq_materials_company_code")
+  @@index([companyId], map: "idx_materials_company")
+  @@index([categoryId], map: "idx_materials_category")
+  @@map("materials")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 16: WAREHOUSES & SITE STORES
+// ------------------------------------------------------------------------------
+
+model Warehouse {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId     String        @map("company_id") @db.Uuid
+  projectId     String?       @map("project_id") @db.Uuid
+  siteId        String?       @map("site_id") @db.Uuid
+  storekeeperId String?       @map("storekeeper_id") @db.Uuid
+  code          String        @db.VarChar(50)
+  name          String        @db.VarChar(255)
+  warehouseType WarehouseType @default(SITE_STORE) @map("warehouse_type")
+  address       String?
+  isActive      Boolean       @default(true) @map("is_active")
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company                  Company            @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  project                  Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  site                     Site?              @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  storekeeper              Employee?          @relation("Storekeeper", fields: [storekeeperId], references: [id], onDelete: SetNull)
+  stockTransactionsSource  StockTransaction[] @relation("SourceWarehouse")
+  stockTransactionsDest    StockTransaction[] @relation("DestWarehouse")
+  stockBalances            StockBalance[]
+  purchaseReceipts         PurchaseReceipt[]
+
+  @@unique([companyId, code], map: "uq_warehouses_company_code")
+  @@index([companyId], map: "idx_warehouses_company")
+  @@index([siteId], map: "idx_warehouses_site")
+  @@map("warehouses")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 17: STOCK TRANSACTIONS (Auditable Double-Entry Ledger)
+// ------------------------------------------------------------------------------
+
+model StockTransaction {
+  id                     String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId              String               @map("company_id") @db.Uuid
+  transactionNumber      String               @map("transaction_number") @db.VarChar(50)
+  transactionType        StockTransactionType @map("transaction_type")
+  materialId             String               @map("material_id") @db.Uuid
+  sourceWarehouseId      String?              @map("source_warehouse_id") @db.Uuid
+  destinationWarehouseId String?              @map("destination_warehouse_id") @db.Uuid
+  projectId              String?              @map("project_id") @db.Uuid
+  siteId                 String?              @map("site_id") @db.Uuid
+  quantity               Decimal              @db.Decimal(14, 4)
+  unitRate               Decimal              @default(0.0000) @map("unit_rate") @db.Decimal(15, 4)
+  totalValue             Decimal              @default(0.00) @map("total_value") @db.Decimal(15, 2)
+  batchNumber            String?              @map("batch_number") @db.VarChar(100)
+  referenceType          String               @map("reference_type") @db.VarChar(50)
+  referenceId            String?              @map("reference_id") @db.Uuid
+  transactedById         String               @map("transacted_by_id") @db.Uuid
+  transactedAt           DateTime             @default(now()) @map("transacted_at") @db.Timestamptz
+  notes                  String?
+  createdAt              DateTime             @default(now()) @map("created_at") @db.Timestamptz
+
+  company              Company    @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  material             Material   @relation(fields: [materialId], references: [id], onDelete: Restrict)
+  sourceWarehouse      Warehouse? @relation("SourceWarehouse", fields: [sourceWarehouseId], references: [id], onDelete: Restrict)
+  destinationWarehouse Warehouse? @relation("DestWarehouse", fields: [destinationWarehouseId], references: [id], onDelete: Restrict)
+  project              Project?   @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  site                 Site?      @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  transactedBy         User       @relation("StockTransactor", fields: [transactedById], references: [id], onDelete: Restrict)
+
+  @@unique([companyId, transactionNumber], map: "uq_stock_tx_number")
+  @@index([companyId, transactedAt], map: "idx_stock_tx_company_time")
+  @@index([materialId], map: "idx_stock_tx_material")
+  @@index([sourceWarehouseId], map: "idx_stock_tx_src_wh")
+  @@index([destinationWarehouseId], map: "idx_stock_tx_dst_wh")
+  @@map("stock_transactions")
+}
+
+model StockBalance {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId         String    @map("company_id") @db.Uuid
+  warehouseId       String    @map("warehouse_id") @db.Uuid
+  materialId        String    @map("material_id") @db.Uuid
+  quantityOnHand    Decimal   @default(0.0000) @map("quantity_on_hand") @db.Decimal(14, 4)
+  allocatedQuantity Decimal   @default(0.0000) @map("allocated_quantity") @db.Decimal(14, 4)
+  averageUnitCost   Decimal   @default(0.0000) @map("average_unit_cost") @db.Decimal(15, 4)
+  lastTransactionAt DateTime? @map("last_transaction_at") @db.Timestamptz
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  material  Material  @relation(fields: [materialId], references: [id], onDelete: Restrict)
+
+  @@unique([companyId, warehouseId, materialId], map: "uq_stock_balances")
+  @@index([companyId, warehouseId, materialId], map: "idx_stock_balances_lookup")
+  @@map("stock_balances")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 18: SUPPLIERS
+// ------------------------------------------------------------------------------
+
+model Supplier {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId        String   @map("company_id") @db.Uuid
+  supplierCode     String   @map("supplier_code") @db.VarChar(50)
+  name             String   @db.VarChar(255)
+  contactPerson    String   @map("contact_person") @db.VarChar(100)
+  email            String   @db.VarChar(255)
+  phone            String   @db.VarChar(30)
+  taxId            String?  @map("tax_id") @db.VarChar(50)
+  panNumber        String?  @map("pan_number") @db.VarChar(50)
+  paymentTermsDays Int      @default(30) @map("payment_terms_days")
+  creditLimit      Decimal? @default(0.00) @map("credit_limit") @db.Decimal(15, 2)
+  rating           Decimal? @default(5.00) @db.Decimal(3, 2)
+  address          String
+  isActive         Boolean  @default(true) @map("is_active")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company        Company         @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  purchaseOrders PurchaseOrder[]
+  invoices       Invoice[]
+  hiredEquipment Equipment[]     @relation("HiredSupplier")
+
+  @@unique([companyId, supplierCode], map: "uq_suppliers_company_code")
+  @@index([companyId], map: "idx_suppliers_company")
+  @@map("suppliers")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 19: PURCHASE ORDERS (PO)
+// ------------------------------------------------------------------------------
+
+model PurchaseOrder {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId            String    @map("company_id") @db.Uuid
+  projectId            String    @map("project_id") @db.Uuid
+  supplierId           String    @map("supplier_id") @db.Uuid
+  poNumber             String    @map("po_number") @db.VarChar(50)
+  orderDate            DateTime  @map("order_date") @db.Date
+  expectedDeliveryDate DateTime? @map("expected_delivery_date") @db.Date
+  subtotalAmount       Decimal   @default(0.00) @map("subtotal_amount") @db.Decimal(15, 2)
+  taxAmount            Decimal   @default(0.00) @map("tax_amount") @db.Decimal(15, 2)
+  totalAmount          Decimal   @default(0.00) @map("total_amount") @db.Decimal(15, 2)
+  status               PoStatus  @default(DRAFT)
+  deliveryTerms        String?   @map("delivery_terms")
+  paymentTerms         String?   @map("payment_terms")
+  shippingAddress      String    @map("shipping_address")
+  createdById          String    @map("created_by_id") @db.Uuid
+  approvedById         String?   @map("approved_by_id") @db.Uuid
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company          Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  project          Project             @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  supplier         Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  createdBy        User                @relation("POCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  approvedBy       User?               @relation("POApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  items            PurchaseOrderItem[]
+  purchaseReceipts PurchaseReceipt[]
+  invoices         Invoice[]
+
+  @@unique([companyId, poNumber], map: "uq_po_company_number")
+  @@index([companyId], map: "idx_po_company")
+  @@index([projectId], map: "idx_po_project")
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId        String   @map("company_id") @db.Uuid
+  purchaseOrderId  String   @map("purchase_order_id") @db.Uuid
+  materialId       String   @map("material_id") @db.Uuid
+  orderedQuantity  Decimal  @map("ordered_quantity") @db.Decimal(14, 4)
+  receivedQuantity Decimal  @default(0.0000) @map("received_quantity") @db.Decimal(14, 4)
+  unitPrice        Decimal  @map("unit_price") @db.Decimal(15, 4)
+  taxPercent       Decimal  @default(0.00) @map("tax_percent") @db.Decimal(5, 2)
+  taxAmount        Decimal  @default(0.00) @map("tax_amount") @db.Decimal(15, 2)
+  totalAmount      Decimal  @default(0.00) @map("total_amount") @db.Decimal(15, 2)
+  notes            String?
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  purchaseOrder        PurchaseOrder         @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  material             Material              @relation(fields: [materialId], references: [id], onDelete: Restrict)
+  purchaseReceiptItems PurchaseReceiptItem[]
+
+  @@index([purchaseOrderId], map: "idx_po_items_order")
+  @@map("purchase_order_items")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 20: PURCHASE RECEIPTS (GRN)
+// ------------------------------------------------------------------------------
+
+model PurchaseReceipt {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId       String    @map("company_id") @db.Uuid
+  purchaseOrderId String    @map("purchase_order_id") @db.Uuid
+  warehouseId     String    @map("warehouse_id") @db.Uuid
+  grnNumber       String    @map("grn_number") @db.VarChar(50)
+  challanNumber   String?   @map("challan_number") @db.VarChar(100)
+  challanDate     DateTime? @map("challan_date") @db.Date
+  vehicleNumber   String?   @map("vehicle_number") @db.VarChar(50)
+  receivedDate    DateTime  @default(now()) @map("received_date") @db.Timestamptz
+  receivedById    String    @map("received_by_id") @db.Uuid
+  status          GrnStatus @default(DRAFT)
+  remarks         String?
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company       Company               @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  purchaseOrder PurchaseOrder         @relation(fields: [purchaseOrderId], references: [id], onDelete: Restrict)
+  warehouse     Warehouse             @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  receivedBy    User                  @relation("GRNReceiver", fields: [receivedById], references: [id], onDelete: Restrict)
+  items         PurchaseReceiptItem[]
+
+  @@unique([companyId, grnNumber], map: "uq_grn_company_number")
+  @@index([companyId], map: "idx_grn_company")
+  @@map("purchase_receipts")
+}
+
+model PurchaseReceiptItem {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId         String   @map("company_id") @db.Uuid
+  purchaseReceiptId String   @map("purchase_receipt_id") @db.Uuid
+  poItemId          String   @map("po_item_id") @db.Uuid
+  materialId        String   @map("material_id") @db.Uuid
+  deliveredQuantity Decimal  @map("delivered_quantity") @db.Decimal(14, 4)
+  acceptedQuantity  Decimal  @default(0.0000) @map("accepted_quantity") @db.Decimal(14, 4)
+  rejectedQuantity  Decimal  @default(0.0000) @map("rejected_quantity") @db.Decimal(14, 4)
+  rejectionReason   String?  @map("rejection_reason")
+  batchNumber       String?  @map("batch_number") @db.VarChar(100)
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  purchaseReceipt PurchaseReceipt   @relation(fields: [purchaseReceiptId], references: [id], onDelete: Cascade)
+  poItem          PurchaseOrderItem @relation(fields: [poItemId], references: [id], onDelete: Restrict)
+  material        Material          @relation(fields: [materialId], references: [id], onDelete: Restrict)
+
+  @@index([purchaseReceiptId], map: "idx_grn_items_receipt")
+  @@map("purchase_receipt_items")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 21: EXPENSES
+// ------------------------------------------------------------------------------
+
+model ExpenseCategory {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  code      String   @db.VarChar(50)
+  name      String   @db.VarChar(100)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  expenses Expense[]
+
+  @@unique([companyId, code], map: "uq_expense_cat_code")
+  @@map("expense_categories")
+}
+
+model Expense {
+  id                   String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId            String        @map("company_id") @db.Uuid
+  projectId            String        @map("project_id") @db.Uuid
+  siteId               String?       @map("site_id") @db.Uuid
+  categoryId           String        @map("category_id") @db.Uuid
+  expenseNumber        String        @map("expense_number") @db.VarChar(50)
+  claimantUserId       String        @map("claimant_user_id") @db.Uuid
+  expenseDate          DateTime      @map("expense_date") @db.Date
+  amount               Decimal       @db.Decimal(15, 2)
+  currency             String        @default("INR") @db.VarChar(3)
+  description          String
+  receiptDocumentUrl   String?       @map("receipt_document_url")
+  status               ApprovalState @default(PENDING)
+  approvedById         String?       @map("approved_by_id") @db.Uuid
+  paymentStatus        String        @default("UNPAID") @map("payment_status") @db.VarChar(50)
+  createdAt            DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company      Company         @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  project      Project         @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  site         Site?           @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  category     ExpenseCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  claimantUser User            @relation("ExpenseClaimant", fields: [claimantUserId], references: [id], onDelete: Restrict)
+  approvedBy   User?           @relation("ExpenseApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@unique([companyId, expenseNumber], map: "uq_expenses_company_number")
+  @@index([companyId], map: "idx_expenses_company")
+  @@index([projectId], map: "idx_expenses_project")
+  @@map("expenses")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 23: INVOICES
+// ------------------------------------------------------------------------------
+
+model Invoice {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId       String        @map("company_id") @db.Uuid
+  projectId       String        @map("project_id") @db.Uuid
+  invoiceType     InvoiceType   @map("invoice_type")
+  supplierId      String?       @map("supplier_id") @db.Uuid
+  contractorId    String?       @map("contractor_id") @db.Uuid
+  purchaseOrderId String?       @map("purchase_order_id") @db.Uuid
+  invoiceNumber   String        @map("invoice_number") @db.VarChar(100)
+  invoiceDate     DateTime      @map("invoice_date") @db.Date
+  dueDate         DateTime      @map("due_date") @db.Date
+  subtotalAmount  Decimal       @default(0.00) @map("subtotal_amount") @db.Decimal(15, 2)
+  taxAmount       Decimal       @default(0.00) @map("tax_amount") @db.Decimal(15, 2)
+  retentionAmount Decimal       @default(0.00) @map("retention_amount") @db.Decimal(15, 2)
+  totalAmount     Decimal       @default(0.00) @map("total_amount") @db.Decimal(15, 2)
+  paidAmount      Decimal       @default(0.00) @map("paid_amount") @db.Decimal(15, 2)
+  balanceDue      Decimal       @default(0.00) @map("balance_due") @db.Decimal(15, 2)
+  status          ApprovalState @default(PENDING)
+  paymentStatus   String        @default("UNPAID") @map("payment_status") @db.VarChar(50)
+  notes           String?
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company       Company         @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  project       Project         @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  supplier      Supplier?       @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  contractor    Contractor?     @relation(fields: [contractorId], references: [id], onDelete: Restrict)
+  purchaseOrder PurchaseOrder?  @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  items         InvoiceItem[]
+  payments      Payment[]
+
+  @@unique([companyId, invoiceType, invoiceNumber], map: "uq_invoices_number")
+  @@index([companyId], map: "idx_invoices_company")
+  @@index([projectId], map: "idx_invoices_project")
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId   String   @map("company_id") @db.Uuid
+  invoiceId   String   @map("invoice_id") @db.Uuid
+  description String
+  quantity    Decimal  @db.Decimal(14, 4)
+  unitPrice   Decimal  @map("unit_price") @db.Decimal(15, 4)
+  taxPercent  Decimal  @default(0.00) @map("tax_percent") @db.Decimal(5, 2)
+  amount      Decimal  @db.Decimal(15, 2)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_items")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 22: PAYMENTS
+// ------------------------------------------------------------------------------
+
+model Payment {
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId       String           @map("company_id") @db.Uuid
+  projectId       String           @map("project_id") @db.Uuid
+  invoiceId       String?          @map("invoice_id") @db.Uuid
+  paymentNumber   String           @map("payment_number") @db.VarChar(50)
+  direction       PaymentDirection
+  paymentMode     PaymentMode      @map("payment_mode")
+  paymentDate     DateTime         @map("payment_date") @db.Date
+  amount          Decimal          @db.Decimal(15, 2)
+  currency        String           @default("INR") @db.VarChar(3)
+  referenceNumber String?          @map("reference_number") @db.VarChar(100)
+  bankName        String?          @map("bank_name") @db.VarChar(150)
+  isReconciled    Boolean          @default(false) @map("is_reconciled")
+  reconciledAt    DateTime?        @map("reconciled_at") @db.Timestamptz
+  recordedById    String           @map("recorded_by_id") @db.Uuid
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz
+
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  invoice    Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  recordedBy User     @relation("PaymentRecorder", fields: [recordedById], references: [id], onDelete: Restrict)
+
+  @@unique([companyId, paymentNumber], map: "uq_payments_number")
+  @@index([companyId], map: "idx_payments_company")
+  @@index([invoiceId], map: "idx_payments_invoice")
+  @@map("payments")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 24: EQUIPMENT & ASSETS
+// ------------------------------------------------------------------------------
+
+model Equipment {
+  id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId           String             @map("company_id") @db.Uuid
+  assetCode           String             @map("asset_code") @db.VarChar(50)
+  name                String             @db.VarChar(255)
+  category            String             @db.VarChar(100)
+  make                String?            @db.VarChar(100)
+  model               String?            @db.VarChar(100)
+  manufacturingYear   Int?               @map("manufacturing_year")
+  serialNumber        String?            @map("serial_number") @db.VarChar(100)
+  ownership           EquipmentOwnership @default(OWNED)
+  supplierId          String?            @map("supplier_id") @db.Uuid
+  hourlyRate          Decimal?           @default(0.00) @map("hourly_rate") @db.Decimal(10, 2)
+  meterType           MeterType          @default(HOURS) @map("meter_type")
+  currentMeterReading Decimal            @default(0.00) @map("current_meter_reading") @db.Decimal(12, 2)
+  status              EquipmentStatus    @default(AVAILABLE)
+  isActive            Boolean            @default(true) @map("is_active")
+  createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company              Company                 @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  hiredSupplier        Supplier?               @relation("HiredSupplier", fields: [supplierId], references: [id], onDelete: SetNull)
+  deployments          EquipmentDeployment[]
+  maintenanceSchedules MaintenanceSchedule[]
+  maintenanceLogs      MaintenanceLog[]
+  dprUsages            DprEquipmentUsage[]
+
+  @@unique([companyId, assetCode], map: "uq_equipment_company_code")
+  @@index([companyId], map: "idx_equipment_company")
+  @@map("equipment")
+}
+
+model EquipmentDeployment {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId         String    @map("company_id") @db.Uuid
+  equipmentId       String    @map("equipment_id") @db.Uuid
+  projectId         String    @map("project_id") @db.Uuid
+  siteId            String    @map("site_id") @db.Uuid
+  operatorId        String?   @map("operator_id") @db.Uuid
+  startDate         DateTime  @map("start_date") @db.Date
+  endDate           DateTime? @map("end_date") @db.Date
+  startMeterReading Decimal   @map("start_meter_reading") @db.Decimal(12, 2)
+  endMeterReading   Decimal?  @map("end_meter_reading") @db.Decimal(12, 2)
+  isActive          Boolean   @default(true) @map("is_active")
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  equipment Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  site      Site      @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  operator  Employee? @relation("EquipmentOperator", fields: [operatorId], references: [id], onDelete: SetNull)
+
+  @@index([equipmentId, siteId, isActive], map: "idx_eq_deployments_lookup")
+  @@map("equipment_deployments")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 25: MAINTENANCE
+// ------------------------------------------------------------------------------
+
+model MaintenanceSchedule {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId       String          @map("company_id") @db.Uuid
+  equipmentId     String          @map("equipment_id") @db.Uuid
+  title           String          @db.VarChar(255)
+  maintenanceType MaintenanceType @default(PREVENTIVE) @map("maintenance_type")
+  intervalHours   Int?            @map("interval_hours")
+  intervalDays    Int?            @map("interval_days")
+  lastServicedAt  DateTime?       @map("last_serviced_at") @db.Timestamptz
+  nextDueReading  Decimal?        @map("next_due_reading") @db.Decimal(12, 2)
+  nextDueDate     DateTime?       @map("next_due_date") @db.Date
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  equipment       Equipment        @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  maintenanceLogs MaintenanceLog[]
+
+  @@map("maintenance_schedules")
+}
+
+model MaintenanceLog {
+  id                    String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId             String          @map("company_id") @db.Uuid
+  equipmentId           String          @map("equipment_id") @db.Uuid
+  maintenanceScheduleId String?         @map("maintenance_schedule_id") @db.Uuid
+  serviceType           MaintenanceType @map("service_type")
+  serviceDate           DateTime        @map("service_date") @db.Date
+  meterReading          Decimal         @map("meter_reading") @db.Decimal(12, 2)
+  cost                  Decimal         @default(0.00) @db.Decimal(15, 2)
+  downtimeHours         Decimal         @default(0.00) @map("downtime_hours") @db.Decimal(6, 2)
+  performedBy           String          @map("performed_by") @db.VarChar(255)
+  description           String
+  partsReplaced         String?         @map("parts_replaced")
+  createdAt             DateTime        @default(now()) @map("created_at") @db.Timestamptz
+
+  company             Company              @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  equipment           Equipment            @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  maintenanceSchedule MaintenanceSchedule? @relation(fields: [maintenanceScheduleId], references: [id], onDelete: SetNull)
+
+  @@index([equipmentId], map: "idx_maint_logs_equipment")
+  @@map("maintenance_logs")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 26: TASKS (WBS & Progress)
+// ------------------------------------------------------------------------------
+
+model Task {
+  id                 String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId          String       @map("company_id") @db.Uuid
+  projectId          String       @map("project_id") @db.Uuid
+  siteId             String       @map("site_id") @db.Uuid
+  parentTaskId       String?      @map("parent_task_id") @db.Uuid
+  wbsCode            String       @map("wbs_code") @db.VarChar(100)
+  name               String       @db.VarChar(255)
+  description        String?
+  assignedLeadId     String?      @map("assigned_lead_id") @db.Uuid
+  contractorId       String?      @map("contractor_id") @db.Uuid
+  plannedStartDate   DateTime     @map("planned_start_date") @db.Date
+  plannedEndDate     DateTime     @map("planned_end_date") @db.Date
+  actualStartDate    DateTime?    @map("actual_start_date") @db.Date
+  actualEndDate      DateTime?    @map("actual_end_date") @db.Date
+  progressPercentage Decimal      @default(0.00) @map("progress_percentage") @db.Decimal(5, 2)
+  status             TaskStatus   @default(NOT_STARTED)
+  priority           TaskPriority @default(MEDIUM)
+  estimatedCost      Decimal?     @default(0.00) @map("estimated_cost") @db.Decimal(15, 2)
+  createdAt          DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company             Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  project             Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  site                Site                @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  parentTask          Task?               @relation("SubTasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
+  subTasks            Task[]              @relation("SubTasks")
+  assignedLead        Employee?           @relation("TaskLead", fields: [assignedLeadId], references: [id], onDelete: SetNull)
+  contractor          Contractor?         @relation(fields: [contractorId], references: [id], onDelete: SetNull)
+  dependencies        TaskDependency[]    @relation("TaskDependents")
+  precedingTasks      TaskDependency[]    @relation("PredecessorTasks")
+  dprWorkItems        DprWorkItem[]
+  qualityInspections  QualityInspection[]
+
+  @@unique([projectId, wbsCode], map: "uq_tasks_wbs")
+  @@index([companyId], map: "idx_tasks_company")
+  @@index([projectId], map: "idx_tasks_project")
+  @@index([siteId], map: "idx_tasks_site")
+  @@map("tasks")
+}
+
+model TaskDependency {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId         String   @map("company_id") @db.Uuid
+  taskId            String   @map("task_id") @db.Uuid
+  predecessorTaskId String   @map("predecessor_task_id") @db.Uuid
+  dependencyType    String   @default("FS") @map("dependency_type") @db.VarChar(10)
+  lagDays           Int      @default(0) @map("lag_days")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  company         Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  task            Task    @relation("TaskDependents", fields: [taskId], references: [id], onDelete: Cascade)
+  predecessorTask Task    @relation("PredecessorTasks", fields: [predecessorTaskId], references: [id], onDelete: Restrict)
+
+  @@unique([taskId, predecessorTaskId], map: "uq_task_deps")
+  @@map("task_dependencies")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 27: DAILY PROGRESS REPORTS (DPR)
+// ------------------------------------------------------------------------------
+
+model DailyProgressReport {
+  id                   String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId            String        @map("company_id") @db.Uuid
+  projectId            String        @map("project_id") @db.Uuid
+  siteId               String        @map("site_id") @db.Uuid
+  dprNumber            String        @map("dpr_number") @db.VarChar(50)
+  reportDate           DateTime      @map("report_date") @db.Date
+  weatherSummary       String?       @map("weather_summary") @db.VarChar(100)
+  temperatureCelsius   Decimal?      @map("temperature_celsius") @db.Decimal(4, 1)
+  engineerInChargeId   String        @map("engineer_in_charge_id") @db.Uuid
+  generalSummary       String        @map("general_summary")
+  obstaclesChallenges  String?       @map("obstacles_challenges")
+  safetyObservations   String?       @map("safety_observations")
+  status               ApprovalState @default(PENDING)
+  approvedById         String?       @map("approved_by_id") @db.Uuid
+  createdAt            DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company          Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  project          Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  site             Site                @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  engineerInCharge Employee            @relation("DPREngineer", fields: [engineerInChargeId], references: [id], onDelete: Restrict)
+  approvedBy       User?               @relation("DPRApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  workItems        DprWorkItem[]
+  manpowerCounts   DprManpowerCount[]
+  equipmentUsages  DprEquipmentUsage[]
+
+  @@unique([companyId, dprNumber], map: "uq_dpr_company_number")
+  @@unique([siteId, reportDate], map: "uq_dpr_site_date")
+  @@index([companyId, reportDate], map: "idx_dpr_company_date")
+  @@index([siteId, reportDate], map: "idx_dpr_site")
+  @@map("daily_progress_reports")
+}
+
+model DprWorkItem {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  dprId               String   @map("dpr_id") @db.Uuid
+  taskId              String?  @map("task_id") @db.Uuid
+  activityDescription String   @map("activity_description")
+  locationDetails     String?  @map("location_details") @db.VarChar(255)
+  uomId               String?  @map("uom_id") @db.Uuid
+  quantityExecuted    Decimal  @map("quantity_executed") @db.Decimal(12, 2)
+  remarks             String?
+
+  dpr  DailyProgressReport @relation(fields: [dprId], references: [id], onDelete: Cascade)
+  task Task?               @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  uom  UnitOfMeasure?      @relation(fields: [uomId], references: [id], onDelete: SetNull)
+
+  @@map("dpr_work_items")
+}
+
+model DprManpowerCount {
+  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  dprId        String      @map("dpr_id") @db.Uuid
+  contractorId String?     @map("contractor_id") @db.Uuid
+  trade        LabourTrade
+  headcount    Int
+  workingHours Decimal     @default(8.00) @map("working_hours") @db.Decimal(4, 2)
+
+  dpr        DailyProgressReport @relation(fields: [dprId], references: [id], onDelete: Cascade)
+  contractor Contractor?         @relation(fields: [contractorId], references: [id], onDelete: SetNull)
+
+  @@map("dpr_manpower_counts")
+}
+
+model DprEquipmentUsage {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  dprId               String   @map("dpr_id") @db.Uuid
+  equipmentId         String   @map("equipment_id") @db.Uuid
+  operatingHours      Decimal  @map("operating_hours") @db.Decimal(5, 2)
+  idleHours           Decimal  @default(0.00) @map("idle_hours") @db.Decimal(5, 2)
+  breakdownHours      Decimal  @default(0.00) @map("breakdown_hours") @db.Decimal(5, 2)
+  workDoneDescription String?  @map("work_done_description")
+
+  dpr       DailyProgressReport @relation(fields: [dprId], references: [id], onDelete: Cascade)
+  equipment Equipment           @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+
+  @@map("dpr_equipment_usages")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 28: SAFETY INCIDENTS (EHS)
+// ------------------------------------------------------------------------------
+
+model SafetyIncident {
+  id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId             String         @map("company_id") @db.Uuid
+  projectId             String         @map("project_id") @db.Uuid
+  siteId                String         @map("site_id") @db.Uuid
+  incidentNumber        String         @map("incident_number") @db.VarChar(50)
+  occurredAt            DateTime       @map("occurred_at") @db.Timestamptz
+  incidentType          IncidentType   @map("incident_type")
+  severity              SeverityLevel
+  locationDetails       String         @map("location_details") @db.VarChar(255)
+  reportedById          String         @map("reported_by_id") @db.Uuid
+  injuredPersonName     String?        @map("injured_person_name") @db.VarChar(150)
+  injuredPersonType     AssigneeType?  @map("injured_person_type")
+  description           String
+  immediateActionsTaken String         @map("immediate_actions_taken")
+  rootCauseAnalysis     String?        @map("root_cause_analysis")
+  correctiveActionsPlan String?        @map("corrective_actions_plan")
+  status                String         @default("OPEN") @db.VarChar(50)
+  createdAt             DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company    Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  project    Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  site       Site    @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  reportedBy User    @relation("IncidentReporter", fields: [reportedById], references: [id], onDelete: Restrict)
+
+  @@unique([companyId, incidentNumber], map: "uq_safety_incidents_number")
+  @@index([companyId], map: "idx_safety_company")
+  @@index([siteId], map: "idx_safety_site")
+  @@map("safety_incidents")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 29: QUALITY INSPECTIONS (QA/QC)
+// ------------------------------------------------------------------------------
+
+model QualityInspectionTemplate {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  title          String   @db.VarChar(255)
+  category       String   @db.VarChar(100)
+  checklistItems Json     @default("[]") @map("checklist_items")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  company     Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  inspections QualityInspection[]
+
+  @@map("quality_inspection_templates")
+}
+
+model QualityInspection {
+  id               String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId        String                    @map("company_id") @db.Uuid
+  projectId        String                    @map("project_id") @db.Uuid
+  siteId           String                    @map("site_id") @db.Uuid
+  templateId       String?                   @map("template_id") @db.Uuid
+  taskId           String?                   @map("task_id") @db.Uuid
+  inspectionNumber String                    @map("inspection_number") @db.VarChar(50)
+  inspectorId      String                    @map("inspector_id") @db.Uuid
+  inspectionDate   DateTime                  @map("inspection_date") @db.Date
+  areaOrGrid       String                    @map("area_or_grid") @db.VarChar(255)
+  result           InspectionResult          @default(PASSED)
+  scorePercentage  Decimal?                  @map("score_percentage") @db.Decimal(5, 2)
+  comments         String?
+  createdAt        DateTime                  @default(now()) @map("created_at") @db.Timestamptz
+
+  company   Company                    @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  project   Project                    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  site      Site                       @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  template  QualityInspectionTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  task      Task?                      @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  inspector Employee                   @relation("QualityInspector", fields: [inspectorId], references: [id], onDelete: Restrict)
+  defects   QualityDefect[]
+
+  @@unique([companyId, inspectionNumber], map: "uq_quality_inspections_num")
+  @@map("quality_inspections")
+}
+
+model QualityDefect {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId      String        @map("company_id") @db.Uuid
+  inspectionId   String?       @map("inspection_id") @db.Uuid
+  siteId         String        @map("site_id") @db.Uuid
+  snagNumber     String        @map("snag_number") @db.VarChar(50)
+  title          String        @db.VarChar(255)
+  description    String
+  severity       SeverityLevel @default(MEDIUM)
+  contractorId   String?       @map("contractor_id") @db.Uuid
+  dueDate        DateTime      @map("due_date") @db.Date
+  photoBeforeUrl String?       @map("photo_before_url")
+  photoAfterUrl  String?       @map("photo_after_url")
+  status         String        @default("OPEN") @db.VarChar(50)
+  resolvedAt     DateTime?     @map("resolved_at") @db.Timestamptz
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company    Company            @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  inspection QualityInspection? @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+  site       Site               @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  contractor Contractor?        @relation(fields: [contractorId], references: [id], onDelete: SetNull)
+
+  @@index([siteId], map: "idx_defects_site")
+  @@map("quality_defects")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 30: DOCUMENTS
+// ------------------------------------------------------------------------------
+
+model Document {
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId       String           @map("company_id") @db.Uuid
+  projectId       String?          @map("project_id") @db.Uuid
+  siteId          String?          @map("site_id") @db.Uuid
+  category        DocumentCategory @default(OTHER)
+  documentCode    String           @map("document_code") @db.VarChar(100)
+  title           String           @db.VarChar(255)
+  description     String?
+  currentVersion  Int              @default(1) @map("current_version")
+  storageProvider String           @default("S3") @map("storage_provider") @db.VarChar(50)
+  storageKey      String           @map("storage_key")
+  fileName        String           @map("file_name") @db.VarChar(255)
+  fileSizeBytes   BigInt           @map("file_size_bytes")
+  mimeType        String           @map("mime_type") @db.VarChar(100)
+  checksumSha256  String           @map("checksum_sha256") @db.VarChar(64)
+  uploadedById    String           @map("uploaded_by_id") @db.Uuid
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company    Company           @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  project    Project?          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  site       Site?             @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  uploadedBy User              @relation("DocUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
+  versions   DocumentVersion[]
+
+  @@unique([companyId, documentCode], map: "uq_documents_code")
+  @@index([projectId], map: "idx_documents_project")
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentId     String   @map("document_id") @db.Uuid
+  versionNumber  Int      @map("version_number")
+  storageKey     String   @map("storage_key")
+  fileName       String   @map("file_name") @db.VarChar(255)
+  fileSizeBytes  BigInt   @map("file_size_bytes")
+  checksumSha256 String   @map("checksum_sha256") @db.VarChar(64)
+  changeSummary  String?  @map("change_summary")
+  uploadedById   String   @map("uploaded_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  uploadedBy User     @relation("VersionUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@unique([documentId, versionNumber], map: "uq_doc_version")
+  @@map("document_versions")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 31: NOTIFICATIONS
+// ------------------------------------------------------------------------------
+
+model Notification {
+  id         String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId  String              @map("company_id") @db.Uuid
+  userId     String              @map("user_id") @db.Uuid
+  title      String              @db.VarChar(255)
+  message    String
+  channel    NotificationChannel @default(IN_APP)
+  entityType String?             @map("entity_type") @db.VarChar(100)
+  entityId   String?             @map("entity_id") @db.Uuid
+  isRead     Boolean             @default(false) @map("is_read")
+  readAt     DateTime?           @map("read_at") @db.Timestamptz
+  metadata   Json                @default("{}")
+  createdAt  DateTime            @default(now()) @map("created_at") @db.Timestamptz
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead], map: "idx_notifications_user_unread")
+  @@map("notifications")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 32: APPROVAL WORKFLOWS ENGINE
+// ------------------------------------------------------------------------------
+
+model ApprovalWorkflow {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId    String   @map("company_id") @db.Uuid
+  code         String   @db.VarChar(50)
+  name         String   @db.VarChar(150)
+  targetEntity String   @map("target_entity") @db.VarChar(100)
+  totalSteps   Int      @default(1) @map("total_steps")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  company   Company            @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  steps     ApprovalStep[]
+  instances ApprovalInstance[]
+
+  @@unique([companyId, code], map: "uq_approval_workflows_code")
+  @@map("approval_workflows")
+}
+
+model ApprovalStep {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workflowId     String   @map("workflow_id") @db.Uuid
+  stepNumber     Int      @map("step_number")
+  stepName       String   @map("step_name") @db.VarChar(100)
+  roleId         String?  @map("role_id") @db.Uuid
+  specificUserId String?  @map("specific_user_id") @db.Uuid
+  isMandatory    Boolean  @default(true) @map("is_mandatory")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  workflow     ApprovalWorkflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  role         Role?            @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  specificUser User?            @relation("StepAssignee", fields: [specificUserId], references: [id], onDelete: SetNull)
+
+  @@unique([workflowId, stepNumber], map: "uq_approval_workflow_step")
+  @@map("approval_steps")
+}
+
+model ApprovalInstance {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId   String        @map("company_id") @db.Uuid
+  workflowId  String        @map("workflow_id") @db.Uuid
+  entityType  String        @map("entity_type") @db.VarChar(100)
+  entityId    String        @map("entity_id") @db.Uuid
+  currentStep Int           @default(1) @map("current_step")
+  status      ApprovalState @default(PENDING)
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  company    Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  workflow   ApprovalWorkflow    @relation(fields: [workflowId], references: [id], onDelete: Restrict)
+  actionLogs ApprovalActionLog[]
+
+  @@map("approval_instances")
+}
+
+model ApprovalActionLog {
+  id         String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  instanceId String        @map("instance_id") @db.Uuid
+  stepNumber Int           @map("step_number")
+  actorId    String        @map("actor_id") @db.Uuid
+  action     ApprovalState
+  comments   String?
+  actionAt   DateTime      @default(now()) @map("action_at") @db.Timestamptz
+
+  instance ApprovalInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+  actor    User             @relation("ActionLogger", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@map("approval_action_logs")
+}
+
+// ------------------------------------------------------------------------------
+// DOMAIN 33: AUDIT LOGS (Immutable System-Wide Forensic Trail)
+// ------------------------------------------------------------------------------
+
+model AuditLog {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId     String?  @map("company_id") @db.Uuid
+  actorUserId   String?  @map("actor_user_id") @db.Uuid
+  action        String   @db.VarChar(50)
+  tableName     String   @map("table_name") @db.VarChar(100)
+  recordId      String?  @map("record_id") @db.Uuid
+  oldData       Json?    @map("old_data")
+  newData       Json?    @map("new_data")
+  changedFields String[] @map("changed_fields")
+  ipAddress     String?  @map("ip_address") @db.VarChar(45)
+  userAgent     String?  @map("user_agent")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  actorUser User?    @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, createdAt], map: "idx_audit_logs_company_time")
+  @@index([tableName, recordId], map: "idx_audit_logs_table_record")
+  @@map("audit_logs")
+}

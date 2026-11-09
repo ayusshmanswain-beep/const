@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 40">
+  <rect x="4" y="6" width="28" height="28" fill="none" stroke="#242725" stroke-width="1.5"/>
+  <path d="M4 26H12V34" fill="none" stroke="#AA8A61" stroke-width="1.5"/>
+  <rect x="14.5" y="16.5" width="7" height="7" fill="#242725"/>
+  <text x="44" y="27" fill="#242725" font-family="Arial, Helvetica, sans-serif" font-size="16" letter-spacing="3">CONSTRUCT</text>
+  <text x="214" y="27" fill="#AA8A61" font-family="Arial, Helvetica, sans-serif" font-size="16" letter-spacing="3">360</text>
+</svg>

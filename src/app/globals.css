@@ -1,0 +1,193 @@
+@import "tailwindcss";
+
+:root {
+  --canvas: #f4f2ec;
+  --ink: #242725;
+  --panel: #f7f6f1;
+  --line: #dddad1;
+  --muted: #5f6554;
+  --accent: #aa8a61;
+  --sage: #dce4d8;
+  --olive: #858c70;
+  --stone: #dddad1;
+  --graphite: #242725;
+  --ivory: #f4f2ec;
+  --glass-nav: rgba(244, 242, 236, 0.72);
+  --glass-panel: rgba(244, 242, 236, 0.8);
+  --glass-float: rgba(247, 246, 241, 0.92);
+  --glass-active: rgba(220, 228, 216, 0.72);
+  --glass-border: rgba(36, 39, 37, 0.12);
+  --glass-highlight: rgba(255, 255, 255, 0.45);
+  --shadow-panel: 0 1px 2px rgba(36, 39, 37, 0.04);
+  --shadow-float: 0 8px 24px rgba(36, 39, 37, 0.08);
+  --success: #3e6b4f;
+  --success-bg: #dce4d8;
+  --warning: #8a5a24;
+  --warning-bg: #f3e6d4;
+  --danger: #8c3a32;
+  --danger-bg: #f6e4e1;
+  --info: #3d5368;
+  --info-bg: #e4e8ec;
+  color-scheme: light;
+}
+
+.dark {
+  --canvas: #242725;
+  --ink: #f4f2ec;
+  --panel: #2c2f2c;
+  --line: rgba(221, 218, 209, 0.2);
+  --muted: #b7bcaa;
+  --accent: #c4a27a;
+  --sage: rgba(220, 228, 216, 0.16);
+  --glass-nav: rgba(36, 39, 37, 0.78);
+  --glass-panel: rgba(44, 47, 44, 0.84);
+  --glass-float: rgba(44, 47, 44, 0.96);
+  --glass-active: rgba(220, 228, 216, 0.14);
+  --glass-border: rgba(244, 242, 236, 0.12);
+  --glass-highlight: rgba(255, 255, 255, 0.06);
+  --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.32);
+  --success: #b7d0c2;
+  --success-bg: rgba(62, 107, 79, 0.28);
+  --warning: #e6c7a2;
+  --warning-bg: rgba(138, 90, 36, 0.28);
+  --danger: #f0c2bc;
+  --danger-bg: rgba(140, 58, 50, 0.28);
+  --info: #c5d2df;
+  --info-bg: rgba(61, 83, 104, 0.32);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-ink: var(--ink);
+  --color-panel: var(--panel);
+  --color-line: var(--line);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-sage: var(--sage);
+  --color-olive: var(--olive);
+  --color-stone: var(--stone);
+  --color-graphite: var(--graphite);
+  --color-ivory: var(--ivory);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --font-sans: var(--font-geist), "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), "Times New Roman", serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --breakpoint-tablet: 45rem;
+  --breakpoint-desktop: 68.75rem;
+  --shadow-panel: var(--shadow-panel);
+  --shadow-float: var(--shadow-float);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 430;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.surface-nav {
+  background: var(--glass-nav);
+  backdrop-filter: blur(12px);
+  border-color: var(--glass-border);
+  box-shadow: inset -1px 0 0 var(--glass-highlight);
+}
+
+.surface-panel {
+  background: var(--glass-panel);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-panel), inset 0 1px 0 var(--glass-highlight);
+  border-radius: 4px;
+}
+
+.surface-float {
+  background: var(--glass-float);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-float), inset 0 1px 0 var(--glass-highlight);
+  border-radius: 6px;
+}
+
+.surface-solid {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -40px;
+  z-index: 80;
+  background: var(--ink);
+  color: var(--canvas);
+  padding: 8px 12px;
+}
+
+.skip-link:focus {
+  top: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
